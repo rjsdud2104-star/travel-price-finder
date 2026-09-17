@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>여행 숙소 최저가 비교</title>
+<style>
+:root {
+  --primary: #0066FF;
+  --primary-light: #E8F0FE;
+  --accent: #FF3D57;
+  --bg: #F5F7FA;
+  --card: #FFFFFF;
+  --text: #1A1A2E;
+  --text2: #6B7280;
+  --border: #E5E7EB;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --radius: 14px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+
+/* ── Header ── */
+header {
+  background: linear-gradient(135deg, #0052D4, #4364F7, #6FB1FC);
+  color: #fff; padding: 0;
+}
+.header-top {
+  max-width: 1200px; margin: 0 auto; padding: 20px 24px 0;
+  display: flex; align-items: center; gap: 12px;
+}
+.logo { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+.logo span { color: #FFD700; }
+
+/* ── Search Box ── */
+.search-section { max-width: 1200px; margin: 0 auto; padding: 24px 24px 32px; }
+.tab-bar { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab-bar button {
+  padding: 8px 22px; border: none; border-radius: 24px;
+  background: rgba(255,255,255,0.2); color: #fff;
+  font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.25s;
+}
+.tab-bar button.active { background: #fff; color: var(--primary); }
+.search-box {
+  background: #fff; border-radius: 20px; padding: 22px;
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr 0.8fr auto; gap: 12px; align-items: end;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+}
+.field label { display: block; font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px; }
+.field input, .field select {
+  width: 100%; padding: 11px 14px; border: 2px solid var(--border); border-radius: 14px;
+  font-size: 15px; outline: none; transition: all 0.25s; background: #FAFBFC;
+}
+.field input:focus, .field select:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(0,102,255,0.1); }
+.search-btn {
+  padding: 12px 36px; background: var(--accent); color: #fff; border: none;
+  border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; white-space: nowrap;
+}
+.search-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(255,61,87,0.4); }
+.search-btn:active { transform: translateY(0); }
+
+/* autocomplete */
+.field { position: relative; }
+.autocomplete-list {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 100;
+  background: #fff; border-radius: 14px; box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  max-height: 280px; overflow-y: auto; display: none; margin-top: 6px;
+}
+.autocomplete-list.show { display: block; }
+.ac-item {
+  padding: 11px 16px; cursor: pointer; font-size: 14px;
+  display: flex; justify-content: space-between; align-items: center; transition: background 0.15s;
+}
+.ac-item:first-child { border-radius: 14px 14px 0 0; }
+.ac-item:last-child { border-radius: 0 0 14px 14px; }
+.ac-item:hover { background: var(--primary-light); }
+.ac-item .country { color: var(--text2); font-size: 12px; }
+
+/* ── Custom Date Picker ── */
+.date-input-wrap { position: relative; }
+.date-display {
+  width: 100%; padding: 11px 14px; border: 2px solid var(--border); border-radius: 14px;
+  font-size: 15px; outline: none; cursor: pointer; background: #FAFBFC; color: var(--text);
+  transition: all 0.25s; display: flex; align-items: center; gap: 8px; user-select: none;
+}
+.date-display:hover { border-color: #B0BEC5; }
+.date-display.active { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 3px rgba(0,102,255,0.1); }
+.date-display .cal-icon { font-size: 16px; opacity: 0.5; }
+.calendar-popup {
+  position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+  z-index: 200; background: #fff; border-radius: 18px; padding: 18px;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.18); min-width: 300px;
+  opacity: 0; visibility: hidden; transform: translateX(-50%) translateY(8px);
+  transition: all 0.25s ease;
+}
+.calendar-popup.show {
+  opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0);
+}
+.cal-header {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;
+}
+.cal-header .cal-title { font-size: 16px; font-weight: 700; }
+.cal-header button {
+  width: 32px; height: 32px; border: none; border-radius: 10px; background: var(--primary-light);
+  color: var(--primary); font-size: 16px; cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+}
+.cal-header button:hover { background: var(--primary); color: #fff; }
+.cal-weekdays {
+  display: grid; grid-template-columns: repeat(7, 1fr); text-align: center;
+  font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px;
+}
+.cal-days {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+}
+.cal-day {
+  width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+  border-radius: 12px; font-size: 14px; cursor: pointer; transition: all 0.15s; border: none; background: none;
+  margin: 0 auto;
+}
+.cal-day:hover:not(.disabled):not(.selected) { background: var(--primary-light); }
+.cal-day.selected { background: var(--primary); color: #fff; font-weight: 700; }
+.cal-day.today { border: 2px solid var(--primary); font-weight: 600; }
+.cal-day.disabled { color: #D1D5DB; cursor: default; }
+.cal-day.other-month { color: #D1D5DB; }
+
+/* ── Main Content ── */
+.container {
+  max-width: 1200px; margin: 0 auto; padding: 0 24px 40px;
+  display: grid; grid-template-columns: 260px 1fr; gap: 24px;
+}
+
+/* Filters sidebar */
+.filters {
+  background: var(--card); border-radius: var(--radius); padding: 22px;
+  box-shadow: var(--shadow); height: fit-content; position: sticky; top: 20px;
+}
+.filters h3 { font-size: 16px; margin-bottom: 16px; }
+.filter-group { margin-bottom: 20px; }
+.filter-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text2); margin-bottom: 8px; }
+.filter-group select {
+  width: 100%; padding: 9px 12px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px;
+  background: #FAFBFC; transition: all 0.2s;
+}
+.filter-group select:focus { border-color: var(--primary); outline: none; }
+.price-range { display: flex; gap: 8px; align-items: center; }
+.price-range input {
+  width: 100%; padding: 9px; border: 1.5px solid var(--border); border-radius: 12px;
+  font-size: 13px; text-align: center; background: #FAFBFC;
+}
+.price-range input:focus { border-color: var(--primary); outline: none; }
+.rating-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.rating-btns button {
+  padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 10px;
+  background: #fff; font-size: 13px; cursor: pointer; transition: all 0.2s;
+}
+.rating-btns button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* Results */
+.results-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+}
+.results-header h2 { font-size: 20px; }
+.results-header h2 span { color: var(--primary); }
+.sort-bar select {
+  padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 12px;
+  font-size: 14px; background: #fff;
+}
+.results-grid { display: flex; flex-direction: column; gap: 16px; }
+
+/* Hotel Card */
+.hotel-card {
+  background: var(--card); border-radius: var(--radius); overflow: hidden;
+  display: grid; grid-template-columns: 280px 1fr 200px; box-shadow: var(--shadow);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.hotel-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,0.12); }
+.card-img { width: 280px; height: 200px; object-fit: cover; background: #e0e0e0; }
+.card-info { padding: 18px 20px; display: flex; flex-direction: column; gap: 6px; }
+.card-info h3 { font-size: 17px; font-weight: 700; }
+.card-meta { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text2); }
+.card-rating {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--primary); color: #fff; padding: 2px 8px; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+}
+.card-addr { font-size: 13px; color: var(--text2); }
+.card-desc { font-size: 13px; color: var(--text2); margin-top: 4px; }
+.card-amenities { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+.card-amenities span {
+  padding: 3px 10px; background: var(--primary-light); color: var(--primary);
+  border-radius: 8px; font-size: 11px; font-weight: 600;
+}
+.card-price {
+  padding: 18px; display: flex; flex-direction: column; align-items: flex-end;
+  justify-content: center; border-left: 1px solid var(--border); gap: 6px;
+}
+.price-provider { font-size: 12px; color: var(--text2); }
+.price-amount { font-size: 26px; font-weight: 800; color: var(--accent); }
+.price-unit { font-size: 13px; color: var(--text2); }
+.price-compare-btn {
+  padding: 9px 18px; background: var(--primary); color: #fff; border: none;
+  border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+  margin-top: 4px; transition: all 0.2s;
+}
+.price-compare-btn:hover { background: #0052cc; transform: translateY(-1px); }
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
+  display: none; align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 20px; padding: 28px; max-width: 580px; width: 92%;
+  max-height: 80vh; overflow-y: auto; position: relative;
+  animation: modalIn 0.25s ease;
+}
+@keyframes modalIn { from { opacity:0; transform:scale(0.95) translateY(10px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.modal-close {
+  position: absolute; top: 14px; right: 18px;
+  background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text2);
+  width: 36px; height: 36px; border-radius: 12px; transition: background 0.15s;
+}
+.modal-close:hover { background: #f0f0f0; }
+.modal h2 { font-size: 20px; margin-bottom: 4px; }
+.modal .modal-sub { font-size: 14px; color: var(--text2); margin-bottom: 20px; }
+.price-table { width: 100%; border-collapse: separate; border-spacing: 0 4px; }
+.price-table th { text-align: left; padding: 10px 14px; font-size: 13px; color: var(--text2); }
+.price-table td { padding: 14px; font-size: 15px; }
+.price-table tr td { background: #F9FAFB; }
+.price-table tr td:first-child { border-radius: 12px 0 0 12px; }
+.price-table tr td:last-child { border-radius: 0 12px 12px 0; }
+.price-table tr:first-child td { background: #FFF8E1; }
+.price-table .orig { text-decoration: line-through; color: #aaa; font-size: 13px; margin-left: 8px; }
+.price-table .lowest-badge {
+  display: inline-block; background: var(--accent); color: #fff; font-size: 11px;
+  padding: 2px 8px; border-radius: 6px; margin-left: 8px; font-weight: 700;
+}
+.price-table .provider-name { font-weight: 600; }
+.price-table .go-btn {
+  padding: 7px 16px; background: var(--primary); color: #fff; border: none;
+  border-radius: 10px; font-size: 13px; cursor: pointer; transition: all 0.15s; font-weight: 600;
+}
+.price-table .go-btn:hover { background: #0052cc; transform: translateY(-1px); }
+
+/* ── Empty / Loading ── */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+.empty-state .icon { font-size: 64px; margin-bottom: 16px; }
+.empty-state p { font-size: 16px; }
+.loading { display: none; text-align: center; padding: 40px; }
+.loading.show { display: block; }
+.spinner {
+  width: 40px; height: 40px; border: 4px solid var(--border);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Popular destinations */
+.popular-section { max-width: 1200px; margin: 0 auto; padding: 20px 24px 30px; }
+.popular-section h2 { font-size: 20px; margin-bottom: 16px; }
+.popular-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;
+}
+.pop-card {
+  background: var(--card); border-radius: 16px; padding: 18px 12px; text-align: center;
+  cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow);
+}
+.pop-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.pop-card .emoji { font-size: 36px; margin-bottom: 8px; }
+.pop-card .name { font-size: 15px; font-weight: 700; }
+.pop-card .country { font-size: 12px; color: var(--text2); margin-top: 2px; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .search-box { grid-template-columns: 1fr 1fr; }
+  .search-btn { grid-column: 1/-1; }
+  .container { grid-template-columns: 1fr; }
+  .filters { position: static; }
+  .hotel-card { grid-template-columns: 200px 1fr 160px; }
+  .card-img { width: 200px; height: 160px; }
+}
+@media (max-width: 600px) {
+  .hotel-card { grid-template-columns: 1fr; }
+  .card-img { width: 100%; height: 180px; }
+  .card-price { border-left: none; border-top: 1px solid var(--border); flex-direction: row; justify-content: space-between; align-items: center; }
+  .popular-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .calendar-popup { min-width: 280px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">Stay<span>Finder</span></div>
+  </div>
+  <div class="search-section">
+    <div class="tab-bar">
+      <button class="active" data-cat="domestic">국내 여행</button>
+      <button data-cat="international">해외 여행</button>
+    </div>
+    <div class="search-box">
+      <div class="field">
+        <label>여행지</label>
+        <input type="text" id="dest-input" placeholder="도시 또는 호텔명 검색" autocomplete="off">
+        <div class="autocomplete-list" id="ac-list"></div>
+      </div>
+      <div class="field">
+        <label>체크인</label>
+        <div class="date-input-wrap">
+          <div class="date-display" id="checkin-display"><span class="cal-icon">📅</span><span id="checkin-text"></span></div>
+          <input type="hidden" id="checkin">
+          <div class="calendar-popup" id="checkin-cal"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>체크아웃</label>
+        <div class="date-input-wrap">
+          <div class="date-display" id="checkout-display"><span class="cal-icon">📅</span><span id="checkout-text"></span></div>
+          <input type="hidden" id="checkout">
+          <div class="calendar-popup" id="checkout-cal"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>인원</label>
+        <select id="guests">
+          <option value="1">1명</option>
+          <option value="2" selected>2명</option>
+          <option value="3">3명</option>
+          <option value="4">4명</option>
+        </select>
+      </div>
+      <button class="search-btn" id="search-btn">검색</button>
+    </div>
+  </div>
+</header>
+
+<div class="popular-section" id="popular-section">
+  <h2>인기 여행지</h2>
+  <div class="popular-grid" id="popular-grid"></div>
+</div>
+
+<div class="container" id="results-container" style="display:none">
+  <aside class="filters">
+    <h3>필터</h3>
+    <div class="filter-group">
+      <label>숙소 유형</label>
+      <select id="filter-type">
+        <option value="">전체</option>
+        <option value="hotel">호텔</option>
+        <option value="resort">리조트</option>
+        <option value="pension">펜션</option>
+        <option value="hostel">호스텔</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label>1박 가격대 (원)</label>
+      <div class="price-range">
+        <input type="number" id="filter-min" placeholder="최소" step="10000">
+        <span>~</span>
+        <input type="number" id="filter-max" placeholder="최대" step="10000">
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>최소 평점</label>
+      <div class="rating-btns">
+        <button data-r="">전체</button>
+        <button data-r="3.5">3.5+</button>
+        <button data-r="4.0">4.0+</button>
+        <button data-r="4.5">4.5+</button>
+      </div>
+    </div>
+  </aside>
+  <main class="results-area">
+    <div class="results-header">
+      <h2 id="results-title">검색 결과</h2>
+      <div class="sort-bar">
+        <select id="sort-select">
+          <option value="price">최저가순</option>
+          <option value="rating">평점순</option>
+          <option value="name">이름순</option>
+        </select>
+      </div>
+    </div>
+    <div class="loading" id="loading"><div class="spinner"></div><p>6개 사이트에서 최저가를 찾고 있어요...</p></div>
+    <div class="results-grid" id="results-grid"></div>
+    <div class="empty-state" id="empty-state" style="display:none">
+      <div class="icon">🔍</div><p>검색 결과가 없습니다. 다른 조건으로 검색해 보세요.</p>
+    </div>
+  </main>
+</div>
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <button class="modal-close" id="modal-close">&times;</button>
+    <h2 id="modal-title"></h2>
+    <p class="modal-sub" id="modal-sub"></p>
+    <table class="price-table">
+      <thead><tr><th>사이트</th><th>1박 요금</th><th></th></tr></thead>
+      <tbody id="modal-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const API = '';
+
+let currentCategory = 'domestic';
+let destinations = [];
+let lastResults = [];
+
+// ══════════════════════════════════════════
+//  Custom Date Picker
+// ══════════════════════════════════════════
+const WEEKDAYS = ['일','월','화','수','목','금','토'];
+const MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+class DatePicker {
+  constructor(displayEl, hiddenInput, calPopup, options = {}) {
+    this.displayEl = displayEl;
+    this.hiddenInput = hiddenInput;
+    this.calPopup = calPopup;
+    this.textEl = displayEl.querySelector('span:last-child');
+    this.minDate = options.minDate || new Date();
+    this.minDate.setHours(0,0,0,0);
+    this.selectedDate = options.initialDate || null;
+    this.viewDate = new Date(this.selectedDate || this.minDate);
+    this.onChange = options.onChange || (() => {});
+    this.isOpen = false;
+
+    if (this.selectedDate) this._setDate(this.selectedDate);
+    this._render();
+
+    displayEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.isOpen ? this.close() : this.open();
+    });
+  }
+
+  open() {
+    document.querySelectorAll('.calendar-popup.show').forEach(p => p.classList.remove('show'));
+    document.querySelectorAll('.date-display.active').forEach(d => d.classList.remove('active'));
+    this.calPopup.classList.add('show');
+    this.displayEl.classList.add('active');
+    this.isOpen = true;
+    this._render();
+  }
+
+  close() {
+    this.calPopup.classList.remove('show');
+    this.displayEl.classList.remove('active');
+    this.isOpen = false;
+  }
+
+  setMin(date) {
+    this.minDate = new Date(date);
+    this.minDate.setHours(0,0,0,0);
+    if (this.selectedDate && this.selectedDate < this.minDate) {
+      this._setDate(new Date(this.minDate));
+    }
+    if (this.isOpen) this._render();
+  }
+
+  _setDate(d) {
+    this.selectedDate = d;
+    const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+    const iso = `${y}-${m}-${day}`;
+    this.hiddenInput.value = iso;
+    this.textEl.textContent = `${y}.${m}.${day} (${WEEKDAYS[d.getDay()]})`;
+    this.onChange(iso, d);
+  }
+
+  _render() {
+    const year = this.viewDate.getFullYear();
+    const month = this.viewDate.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date(); today.setHours(0,0,0,0);
+
+    let html = `
+      <div class="cal-header">
+        <button class="cal-prev">‹</button>
+        <span class="cal-title">${year}년 ${MONTHS[month]}</span>
+        <button class="cal-next">›</button>
+      </div>
+      <div class="cal-weekdays">${WEEKDAYS.map(w => `<span>${w}</span>`).join('')}</div>
+      <div class="cal-days">
+    `;
+
+    const prevDays = new Date(year, month, 0).getDate();
+    for (let i = firstDay - 1; i >= 0; i--) {
+      html += `<button class="cal-day other-month disabled">${prevDays - i}</button>`;
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const disabled = date < this.minDate;
+      const isToday = date.getTime() === today.getTime();
+      const isSelected = this.selectedDate && date.getTime() === this.selectedDate.getTime();
+      const cls = [
+        'cal-day',
+        disabled ? 'disabled' : '',
+        isToday ? 'today' : '',
+        isSelected ? 'selected' : '',
+      ].filter(Boolean).join(' ');
+      html += `<button class="${cls}" data-day="${d}">${d}</button>`;
+    }
+
+    const totalCells = firstDay + daysInMonth;
+    const remaining = (7 - totalCells % 7) % 7;
+    for (let i = 1; i <= remaining; i++) {
+      html += `<button class="cal-day other-month disabled">${i}</button>`;
+    }
+
+    html += '</div>';
+    this.calPopup.innerHTML = html;
+
+    this.calPopup.querySelector('.cal-prev').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.viewDate.setMonth(this.viewDate.getMonth() - 1);
+      this._render();
+    });
+    this.calPopup.querySelector('.cal-next').addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.viewDate.setMonth(this.viewDate.getMonth() + 1);
+      this._render();
+    });
+    this.calPopup.querySelectorAll('.cal-day:not(.disabled):not(.other-month)').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const day = +btn.dataset.day;
+        this._setDate(new Date(year, month, day));
+        this._render();
+        this.close();
+      });
+    });
+  }
+}
+
+// Init date pickers
+const today = new Date(); today.setHours(0,0,0,0);
+const defaultCheckin = new Date(today); defaultCheckin.setDate(defaultCheckin.getDate() + 7);
+const defaultCheckout = new Date(defaultCheckin); defaultCheckout.setDate(defaultCheckout.getDate() + 1);
+
+let checkoutPicker;
+const checkinPicker = new DatePicker(
+  $('#checkin-display'), $('#checkin'), $('#checkin-cal'),
+  { minDate: new Date(today), initialDate: defaultCheckin, onChange: (iso, d) => {
+    const next = new Date(d); next.setDate(next.getDate() + 1);
+    if (checkoutPicker) checkoutPicker.setMin(next);
+  }}
+);
+checkoutPicker = new DatePicker(
+  $('#checkout-display'), $('#checkout'), $('#checkout-cal'),
+  { minDate: new Date(defaultCheckin.getTime() + 86400000), initialDate: defaultCheckout }
+);
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.date-input-wrap')) {
+    checkinPicker.close();
+    checkoutPicker.close();
+  }
+  if (!e.target.closest('.field')) $('#ac-list').classList.remove('show');
+});
+
+// ══════════════════════════════════════════
+//  Tabs
+// ══════════════════════════════════════════
+$$('.tab-bar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.tab-bar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentCategory = btn.dataset.cat;
+    $('#dest-input').value = '';
+    $('#results-container').style.display = 'none';
+    $('#popular-section').style.display = '';
+    loadPopular();
+  });
+});
+
+// ══════════════════════════════════════════
+//  Destinations & Autocomplete
+// ══════════════════════════════════════════
+async function loadDestinations() {
+  const r = await fetch(`${API}/api/destinations`);
+  destinations = await r.json();
+  loadPopular();
+}
+
+const DEST_EMOJIS = {
+  '서울':'🏙️','부산':'🌊','제주':'🏝️','강릉':'⛰️','경주':'🏛️','여수':'🌅',
+  '속초':'🏔️','전주':'🏡','대구':'🌆','인천':'✈️','광주':'🎨','대전':'🔬',
+  '울산':'🏭','수원':'🏯','춘천':'🍗','가평':'🌲','양양':'🏄','통영':'⛵',
+  '거제':'🌊','남해':'🐚','목포':'🚢','안동':'🎭','포항':'🐟','순천':'🌿',
+  '평창':'⛷️','담양':'🎋',
+  '도쿄':'🗼','오사카':'🏯','방콕':'🛕','다낭':'🏖️','싱가포르':'🦁',
+  '하와이':'🌺','파리':'🗼','런던':'🎡','뉴욕':'🗽','세부':'🤿',
+  '발리':'🌴','후쿠오카':'🍜','타이베이':'🧋','홍콩':'🌃',
+};
+
+function loadPopular() {
+  const filtered = destinations.filter(d => d.category === currentCategory);
+  $('#popular-grid').innerHTML = filtered.map(d => `
+    <div class="pop-card" data-dest="${d.name}">
+      <div class="emoji">${DEST_EMOJIS[d.name]||'✈️'}</div>
+      <div class="name">${d.name}</div>
+      <div class="country">${d.country}</div>
+    </div>
+  `).join('');
+  $$('.pop-card').forEach(c => c.addEventListener('click', () => {
+    $('#dest-input').value = c.dataset.dest;
+    doSearch();
+  }));
+}
+
+$('#dest-input').addEventListener('input', () => {
+  const q = $('#dest-input').value.trim().toLowerCase();
+  const list = $('#ac-list');
+  if (!q) { list.classList.remove('show'); return; }
+  const matches = destinations.filter(d =>
+    d.category === currentCategory &&
+    (d.name.toLowerCase().includes(q) || d.name_en.toLowerCase().includes(q) || d.country.toLowerCase().includes(q))
+  );
+  if (!matches.length) { list.classList.remove('show'); return; }
+  list.innerHTML = matches.map(d => `
+    <div class="ac-item" data-name="${d.name}">
+      <span>${DEST_EMOJIS[d.name]||'✈️'} ${d.name} (${d.name_en})</span>
+      <span class="country">${d.country}</span>
+    </div>
+  `).join('');
+  list.classList.add('show');
+  list.querySelectorAll('.ac-item').forEach(item => {
+    item.addEventListener('click', () => {
+      $('#dest-input').value = item.dataset.name;
+      list.classList.remove('show');
+    });
+  });
+});
+
+// ══════════════════════════════════════════
+//  Search
+// ══════════════════════════════════════════
+$('#search-btn').addEventListener('click', doSearch);
+$('#dest-input').addEventListener('keydown', e => { if (e.key === 'Enter') doSearch(); });
+
+async function doSearch() {
+  const dest = $('#dest-input').value.trim();
+  if (!dest) { $('#dest-input').focus(); return; }
+
+  $('#popular-section').style.display = 'none';
+  $('#results-container').style.display = 'grid';
+  $('#loading').classList.add('show');
+  $('#results-grid').innerHTML = '';
+  $('#empty-state').style.display = 'none';
+
+  const body = {
+    destination: dest,
+    checkin: $('#checkin').value,
+    checkout: $('#checkout').value,
+    guests: +$('#guests').value,
+    category: currentCategory,
+    sort_by: $('#sort-select').value,
+    hotel_type: $('#filter-type').value || null,
+    min_price: +$('#filter-min').value || null,
+    max_price: +$('#filter-max').value || null,
+    min_rating: null,
+  };
+  const activeR = $('.rating-btns button.active');
+  if (activeR && activeR.dataset.r) body.min_rating = +activeR.dataset.r;
+
+  try {
+    const r = await fetch(`${API}/api/search`, {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    const data = await r.json();
+    lastResults = data.results;
+    $('#results-title').innerHTML = `<span>${dest}</span> 검색 결과 ${data.total}건 <small style="font-weight:400;color:var(--text2)">(${data.nights}박)</small>`;
+    if (!data.results.length) {
+      $('#empty-state').style.display = 'block';
+    } else {
+      renderResults(data.results, data.nights);
+    }
+  } catch(e) {
+    $('#results-grid').innerHTML = `<div class="empty-state"><div class="icon">⚠️</div><p>검색 중 오류가 발생했습니다.</p></div>`;
+  }
+  $('#loading').classList.remove('show');
+}
+
+function renderResults(results, nights) {
+  $('#results-grid').innerHTML = results.map((h, i) => `
+    <div class="hotel-card">
+      <img class="card-img" src="${h.image}" alt="${h.name}" loading="lazy"
+           onerror="this.src='https://images.unsplash.com/photo-1566073771259-6a8506099945?w=480&h=320&fit=crop';">
+      <div class="card-info">
+        <h3>${h.name}</h3>
+        <div class="card-meta">
+          <span class="card-rating">★ ${h.rating}</span>
+          <span>리뷰 ${h.review_count.toLocaleString()}개</span>
+          <span>· ${typeLabel(h.hotel_type)}</span>
+        </div>
+        <div class="card-addr">📍 ${h.address}</div>
+        <div class="card-desc">${h.description}</div>
+        <div class="card-amenities">
+          ${h.amenities.slice(0,4).map(a => `<span>${a}</span>`).join('')}
+          ${h.amenities.length > 4 ? `<span>+${h.amenities.length-4}</span>` : ''}
+        </div>
+      </div>
+      <div class="card-price">
+        <div class="price-provider">${h.lowest_provider} 최저가</div>
+        <div class="price-amount">${h.lowest_price.toLocaleString()}원</div>
+        <div class="price-unit">1박 기준${nights > 1 ? ` · 총 ${(h.lowest_price*nights).toLocaleString()}원` : ''}</div>
+        <button class="price-compare-btn" onclick="showCompare(${i})">
+          ${h.prices.length}개 사이트 비교
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function typeLabel(t) {
+  return {hotel:'호텔',resort:'리조트',pension:'펜션',hostel:'호스텔'}[t]||t;
+}
+
+// ══════════════════════════════════════════
+//  Compare Modal
+// ══════════════════════════════════════════
+function showCompare(idx) {
+  const h = lastResults[idx];
+  if (!h) return;
+  $('#modal-title').textContent = h.name;
+  $('#modal-sub').textContent = `${h.destination} · ${typeLabel(h.hotel_type)} · ★ ${h.rating}`;
+  $('#modal-body').innerHTML = h.prices.map((p, i) => `
+    <tr>
+      <td class="provider-name">${p.provider}</td>
+      <td>
+        <strong>${p.price.toLocaleString()}원</strong>
+        ${p.original_price ? `<span class="orig">${p.original_price.toLocaleString()}원</span>` : ''}
+        ${i === 0 ? '<span class="lowest-badge">최저가</span>' : ''}
+      </td>
+      <td><a class="go-btn" href="${p.url}" target="_blank" rel="noopener">예약하기 →</a></td>
+    </tr>
+  `).join('');
+  $('#modal-overlay').classList.add('show');
+}
+$('#modal-close').addEventListener('click', () => $('#modal-overlay').classList.remove('show'));
+$('#modal-overlay').addEventListener('click', e => {
+  if (e.target === $('#modal-overlay')) $('#modal-overlay').classList.remove('show');
+});
+
+// ══════════════════════════════════════════
+//  Filters
+// ══════════════════════════════════════════
+$('#sort-select').addEventListener('change', doSearch);
+$('#filter-type').addEventListener('change', doSearch);
+$('#filter-min').addEventListener('change', doSearch);
+$('#filter-max').addEventListener('change', doSearch);
+$$('.rating-btns button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.rating-btns button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (lastResults.length) doSearch();
+  });
+});
+$('.rating-btns button[data-r=""]').classList.add('active');
+
+// Init
+loadDestinations();
+</script>
+</body>
+</html>
