@@ -3,22 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>StayFinder - 숙소 가격비교</title>
+<title>여행가자! - 숙소 가격비교</title>
 <style>
 :root {
-  --primary: #2563EB;
-  --primary-dark: #1D4ED8;
-  --primary-light: #3B82F6;
-  --accent: #FFD700;
-  --bg: #F3F4F6;
+  --primary: #FF6B6B;
+  --primary-dark: #EE5A5A;
+  --primary-light: #FF8E8E;
+  --accent: #FFE066;
+  --mint: #A0E8D2;
+  --sky: #87CEEB;
+  --lavender: #C4B5FD;
+  --peach: #FFDAB9;
+  --bg: #FFF9F5;
   --card-bg: #FFFFFF;
-  --text: #1F2937;
-  --text-secondary: #6B7280;
-  --border: #E5E7EB;
-  --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
-  --radius: 12px;
-  --radius-sm: 8px;
+  --text: #3D3D3D;
+  --text-secondary: #8E8E8E;
+  --border: #F0E6E0;
+  --shadow: 0 2px 8px rgba(255,107,107,.08), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-lg: 0 8px 24px rgba(255,107,107,.12), 0 4px 8px rgba(0,0,0,.04);
+  --radius: 16px;
+  --radius-sm: 10px;
   --transition: .2s ease;
 }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -33,54 +37,63 @@ a { color: inherit; text-decoration: none; }
 
 /* ========== HEADER ========== */
 .header {
-  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #60A5FA 100%);
-  color: #fff;
+  background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 40%, #FFF0C8 70%, #A0E8D2 100%);
+  color: #3D3D3D;
   padding: 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 2px 12px rgba(30,64,175,.3);
+  box-shadow: 0 3px 16px rgba(255,154,158,.25);
 }
 .header-inner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 16px 24px 0;
+  padding: 14px 24px 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 .logo {
-  font-size: 28px;
-  font-weight: 800;
+  font-size: 30px;
+  font-weight: 900;
   letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.logo span { color: var(--accent); }
+.logo-emoji { font-size: 32px; animation: bounce 2s ease infinite; }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+.logo span { color: var(--primary); }
 .header-sub {
   font-size: 13px;
-  opacity: .85;
+  color: #7A6B6B;
+  margin-top: 1px;
 }
 
 /* Tab bar */
 .tab-bar {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 12px 24px 0;
+  padding: 10px 24px 0;
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 .tab-btn {
-  background: rgba(255,255,255,.15);
-  color: #fff;
+  background: rgba(255,255,255,.45);
+  color: #6B5B5B;
   border: none;
   padding: 10px 28px;
-  border-radius: 10px 10px 0 0;
+  border-radius: 14px 14px 0 0;
   font-size: 15px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: all var(--transition);
 }
-.tab-btn:hover { background: rgba(255,255,255,.25); }
-.tab-btn.active { background: var(--bg); color: var(--text); }
+.tab-btn:hover { background: rgba(255,255,255,.7); }
+.tab-btn.active { background: var(--bg); color: var(--primary); }
 
 /* ========== SEARCH BOX ========== */
 .search-section {
@@ -90,13 +103,14 @@ a { color: inherit; text-decoration: none; }
 }
 .search-box {
   background: var(--card-bg);
-  border-radius: var(--radius);
+  border-radius: 20px;
   padding: 24px;
   box-shadow: var(--shadow-lg);
   display: flex;
   gap: 12px;
   align-items: flex-end;
   flex-wrap: wrap;
+  border: 2px solid #FFE8E8;
 }
 .search-field {
   flex: 1;
@@ -122,22 +136,23 @@ a { color: inherit; text-decoration: none; }
 }
 .search-field input:focus, .search-field select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  box-shadow: 0 0 0 3px rgba(255,107,107,.12);
 }
 .search-btn {
-  background: var(--primary);
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
   color: #fff;
   border: none;
   padding: 12px 32px;
-  border-radius: var(--radius-sm);
+  border-radius: 24px;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
-  transition: background var(--transition), transform .1s;
+  transition: all var(--transition);
   white-space: nowrap;
   height: 44px;
+  box-shadow: 0 4px 12px rgba(255,107,107,.3);
 }
-.search-btn:hover { background: var(--primary-dark); }
+.search-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(255,107,107,.4); }
 .search-btn:active { transform: scale(.97); }
 
 /* Autocomplete */
@@ -165,7 +180,7 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
   align-items: center;
 }
-.ac-item:hover, .ac-item.highlighted { background: #EFF6FF; }
+.ac-item:hover, .ac-item.highlighted { background: #FFF0F0; }
 .ac-item .ac-country { font-size: 12px; color: var(--text-secondary); }
 
 /* DatePicker */
@@ -229,18 +244,19 @@ a { color: inherit; text-decoration: none; }
   font-size: 14px;
   transition: background var(--transition), color var(--transition);
 }
-.dp-day:hover:not(.disabled):not(.empty) { background: #EFF6FF; }
+.dp-day:hover:not(.disabled):not(.empty) { background: #FFF0F0; }
 .dp-day.today { font-weight: 700; color: var(--primary); }
 .dp-day.selected { background: var(--primary); color: #fff; font-weight: 700; }
 .dp-day.disabled { color: #D1D5DB; cursor: default; }
 .dp-day.empty { cursor: default; }
-.dp-day.in-range { background: #DBEAFE; }
+.dp-day.in-range { background: #FFE4E4; }
 
 /* ========== POPULAR DESTINATIONS ========== */
 .section-title {
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 32px 0 16px;
+  color: #4A4A4A;
 }
 .popular-grid {
   display: grid;
@@ -249,19 +265,21 @@ a { color: inherit; text-decoration: none; }
 }
 .dest-card {
   background: var(--card-bg);
-  border-radius: var(--radius);
+  border-radius: 20px;
   padding: 20px 12px;
   text-align: center;
   cursor: pointer;
   transition: transform var(--transition), box-shadow var(--transition);
   box-shadow: var(--shadow);
+  border: 2px solid transparent;
 }
 .dest-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-6px) rotate(-1deg);
   box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
 }
-.dest-emoji { font-size: 36px; margin-bottom: 8px; }
-.dest-name { font-size: 15px; font-weight: 600; }
+.dest-emoji { font-size: 40px; margin-bottom: 8px; }
+.dest-name { font-size: 15px; font-weight: 700; color: #4A4A4A; }
 .dest-country { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
 
 /* ========== MAIN LAYOUT ========== */
@@ -368,17 +386,19 @@ a { color: inherit; text-decoration: none; }
 /* Hotel card */
 .hotel-card {
   background: var(--card-bg);
-  border-radius: var(--radius);
+  border-radius: 20px;
   box-shadow: var(--shadow);
   display: flex;
   overflow: hidden;
   margin-bottom: 16px;
   transition: box-shadow var(--transition), transform var(--transition);
   cursor: pointer;
+  border: 2px solid transparent;
 }
 .hotel-card:hover {
   box-shadow: var(--shadow-lg);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  border-color: #FFE0E0;
 }
 .hotel-img {
   width: 260px;
@@ -429,10 +449,10 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 8px;
 }
 .rating-badge {
-  background: var(--primary);
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
   color: #fff;
-  padding: 2px 8px;
-  border-radius: 6px;
+  padding: 3px 10px;
+  border-radius: 12px;
   font-size: 13px;
   font-weight: 700;
 }
@@ -444,12 +464,12 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 10px;
 }
 .amenity-tag {
-  background: #EFF6FF;
-  color: var(--primary);
-  padding: 3px 8px;
-  border-radius: 4px;
+  background: #FFF0F0;
+  color: #FF6B6B;
+  padding: 4px 10px;
+  border-radius: 12px;
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
 }
 .hotel-desc {
   font-size: 13px;
@@ -559,7 +579,7 @@ a { color: inherit; text-decoration: none; }
   transition: border-color var(--transition);
 }
 .ota-row:hover { border-color: var(--primary-light); }
-.ota-row.cheapest { border-color: var(--primary); background: #EFF6FF; }
+.ota-row.cheapest { border-color: var(--primary); background: #FFF5F5; }
 .ota-left { display: flex; align-items: center; gap: 12px; }
 .ota-dot {
   width: 10px;
@@ -569,12 +589,12 @@ a { color: inherit; text-decoration: none; }
 }
 .ota-name { font-weight: 600; font-size: 15px; }
 .cheapest-badge {
-  background: var(--primary);
+  background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
   color: #fff;
   font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 700;
 }
 .ota-right { display: flex; align-items: center; gap: 16px; }
 .ota-prices { text-align: right; }
@@ -649,14 +669,15 @@ a { color: inherit; text-decoration: none; }
 
 /* ========== FOOTER ========== */
 .footer {
-  background: #1F2937;
-  color: #9CA3AF;
+  background: linear-gradient(135deg, #FFE0E0 0%, #FFF0E0 50%, #E0F5EC 100%);
+  color: #8E7A7A;
   text-align: center;
-  padding: 24px;
+  padding: 28px;
   font-size: 13px;
   margin-top: 40px;
+  border-top: 2px dashed #FFD4D4;
 }
-.footer a { color: #60A5FA; }
+.footer a { color: var(--primary); }
 
 /* ========== RESPONSIVE ========== */
 @media (max-width: 900px) {
@@ -667,6 +688,7 @@ a { color: inherit; text-decoration: none; }
 @media (max-width: 600px) {
   .header-inner { padding: 12px 16px 0; }
   .logo { font-size: 22px; }
+  .logo-emoji { font-size: 24px; }
   .tab-bar { padding: 8px 16px 0; }
   .search-section { padding: 16px 16px 0; }
   .search-box { flex-direction: column; padding: 16px; }
@@ -689,7 +711,7 @@ a { color: inherit; text-decoration: none; }
 <header class="header">
   <div class="header-inner">
     <div>
-      <div class="logo">Stay<span>Finder</span></div>
+      <div class="logo"><span class="logo-emoji">&#x2708;&#xFE0F;</span> 여행가자<span>!</span></div>
       <div class="header-sub">최저가 숙소를 한눈에 비교하세요</div>
     </div>
   </div>
@@ -741,7 +763,7 @@ a { color: inherit; text-decoration: none; }
 <div class="main-area">
   <!-- Popular destinations -->
   <div id="popularSection">
-    <h2 class="section-title" id="popularTitle">인기 여행지</h2>
+    <h2 class="section-title" id="popularTitle">&#x1F31F; 인기 여행지</h2>
     <div class="popular-grid" id="popularGrid"></div>
   </div>
 
@@ -799,7 +821,7 @@ a { color: inherit; text-decoration: none; }
 
 <!-- Footer -->
 <footer class="footer">
-  StayFinder &copy; 2026. 실제 예약은 각 OTA 사이트에서 진행됩니다. 표시 가격은 참고용이며 실제 가격과 다를 수 있습니다.
+  &#x2708;&#xFE0F; 여행가자! &copy; 2026 &nbsp;|&nbsp; 실제 예약은 각 OTA 사이트에서 진행됩니다. 표시 가격은 참고용이며 실제 가격과 다를 수 있습니다.
 </footer>
 
 <script>
@@ -1344,7 +1366,7 @@ function showPopularDestinations() {
   const pop = DESTINATIONS.filter(d => d.popular && d.category === currentTab);
   const grid = document.getElementById('popularGrid');
   const title = document.getElementById('popularTitle');
-  title.textContent = currentTab === 'domestic' ? '인기 국내 여행지' : '인기 해외 여행지';
+  title.textContent = currentTab === 'domestic' ? '\u{1F31F} 인기 국내 여행지' : '\u{1F30F} 인기 해외 여행지';
   grid.innerHTML = pop.map(d =>
     `<div class="dest-card" data-dest="${d.name}">
       <div class="dest-emoji">${DEST_EMOJI[d.name] || '🏨'}</div>
