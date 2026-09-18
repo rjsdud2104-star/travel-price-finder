@@ -1036,14 +1036,15 @@ function seededRandom(seed) {
 function bookingUrl(provider, hotelName, destination, checkin, checkout) {
   const name = encodeURIComponent(hotelName);
   const dest = encodeURIComponent(destination);
+  const ci = checkin, co = checkout;
   switch (provider) {
-    case "야놀자": return `https://www.yanolja.com/search/${name}`;
-    case "여기어때": return `https://www.goodchoice.kr/product/search/2?keyword=${name}`;
-    case "부킹닷컴": return `https://www.booking.com/searchresults.ko.html?ss=${name}&checkin=${checkin}&checkout=${checkout}`;
-    case "아고다": return `https://www.agoda.com/ko-kr/search?textToSearch=${name}&checkIn=${checkin}&checkOut=${checkout}`;
-    case "호텔스닷컴": return `https://kr.hotels.com/search.do?q-destination=${name}&q-check-in=${checkin}&q-check-out=${checkout}`;
-    case "트립닷컴": return `https://kr.trip.com/hotels/list?keyword=${name}&city=${dest}&checkin=${checkin}&checkout=${checkout}`;
-    default: return `https://www.google.com/search?q=${name}+${dest}+호텔+예약`;
+    case "야놀자": return `https://www.yanolja.com/search/${name}?checkin=${ci}&checkout=${co}`;
+    case "여기어때": return `https://www.goodchoice.kr/product/search/2?keyword=${name}&checkIn=${ci}&checkOut=${co}`;
+    case "부킹닷컴": return `https://www.booking.com/searchresults.ko.html?ss=${name}&checkin=${ci}&checkout=${co}`;
+    case "아고다": return `https://www.agoda.com/ko-kr/search?textToSearch=${name}&checkIn=${ci}&checkOut=${co}`;
+    case "호텔스닷컴": return `https://kr.hotels.com/search.do?q-destination=${name}&q-check-in=${ci}&q-check-out=${co}`;
+    case "트립닷컴": return `https://kr.trip.com/hotels/list?keyword=${name}&city=${dest}&checkin=${ci}&checkout=${co}`;
+    default: return `https://www.google.com/search?q=${name}+${dest}+호텔+예약+${ci}`;
   }
 }
 
