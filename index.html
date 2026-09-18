@@ -1357,8 +1357,28 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
 
-  // Show popular
-  showPopularDestinations();
+  // Restore state from URL hash (if shared link)
+  const urlState = loadStateFromURL();
+  if (urlState) {
+    document.getElementById('destInput').value = urlState.dest;
+    selectedCheckin = urlState.in;
+    selectedCheckout = urlState.out;
+    checkinPicker.selected = urlState.in;
+    checkinPicker.input.value = urlState.in;
+    checkoutPicker.selected = urlState.out;
+    checkoutPicker.input.value = urlState.out;
+    checkoutPicker.setMinDate(urlState.in);
+    if (urlState.guests) document.getElementById('guestSelect').value = urlState.guests;
+    const destCat = DESTINATIONS.find(d => d.name === urlState.dest);
+    if (destCat && destCat.category === 'international') {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelector('.tab-btn[data-tab="international"]').classList.add('active');
+      currentTab = 'international';
+    }
+    doSearch();
+  } else {
+    showPopularDestinations();
+  }
 });
 
 // ====================== POPULAR DESTINATIONS ======================
@@ -1382,11 +1402,31 @@ function showPopularDestinations() {
   });
 }
 
+// ====================== URL STATE ======================
+function saveStateToURL() {
+  const dest = document.getElementById('destInput').value.trim();
+  if (!dest || !selectedCheckin || !selectedCheckout) return;
+  const guests = document.getElementById('guestSelect').value;
+  const hash = `#dest=${encodeURIComponent(dest)}&in=${selectedCheckin}&out=${selectedCheckout}&guests=${guests}`;
+  history.replaceState(null, '', hash);
+}
+
+function loadStateFromURL() {
+  const hash = location.hash.slice(1);
+  if (!hash) return null;
+  const p = {};
+  hash.split('&').forEach(kv => { const [k,v] = kv.split('='); if (k && v) p[k] = decodeURIComponent(v); });
+  if (p.dest && p.in && p.out) return p;
+  return null;
+}
+
 // ====================== SEARCH ======================
 function doSearch() {
   const dest = document.getElementById('destInput').value.trim();
   if (!dest) { alert('여행지를 입력해주세요.'); return; }
   if (!selectedCheckin || !selectedCheckout) { alert('체크인/체크아웃 날짜를 선택해주세요.'); return; }
+
+  saveStateToURL();
 
   // Gather filters
   const typeChecks = document.querySelectorAll('.filter-group input[type="checkbox"]');
