@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StayFinder - 숙소 가격비교</title>
+<style>
+:root {
+  --primary: #2563EB;
+  --primary-dark: #1D4ED8;
+  --primary-light: #3B82F6;
+  --accent: #FFD700;
+  --bg: #F3F4F6;
+  --card-bg: #FFFFFF;
+  --text: #1F2937;
+  --text-secondary: #6B7280;
+  --border: #E5E7EB;
+  --shadow: 0 1px 3px rgba(0,0,0,.1), 0 1px 2px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -2px rgba(0,0,0,.05);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --transition: .2s ease;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ========== HEADER ========== */
+.header {
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #60A5FA 100%);
+  color: #fff;
+  padding: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 12px rgba(30,64,175,.3);
+}
+.header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 24px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.logo {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--accent); }
+.header-sub {
+  font-size: 13px;
+  opacity: .85;
+}
+
+/* Tab bar */
+.tab-bar {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 24px 0;
+  display: flex;
+  gap: 4px;
+}
+.tab-btn {
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: none;
+  padding: 10px 28px;
+  border-radius: 10px 10px 0 0;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.tab-btn:hover { background: rgba(255,255,255,.25); }
+.tab-btn.active { background: var(--bg); color: var(--text); }
+
+/* ========== SEARCH BOX ========== */
+.search-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 0;
+}
+.search-box {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.search-field {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.search-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.search-field input, .search-field select {
+  padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  outline: none;
+  transition: border-color var(--transition);
+  background: #fff;
+  width: 100%;
+}
+.search-field input:focus, .search-field select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.search-btn {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 12px 32px;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition), transform .1s;
+  white-space: nowrap;
+  height: 44px;
+}
+.search-btn:hover { background: var(--primary-dark); }
+.search-btn:active { transform: scale(.97); }
+
+/* Autocomplete */
+.autocomplete-wrap { position: relative; }
+.autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  max-height: 260px;
+  overflow-y: auto;
+  z-index: 200;
+  display: none;
+}
+.autocomplete-list.show { display: block; }
+.ac-item {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.ac-item:hover, .ac-item.highlighted { background: #EFF6FF; }
+.ac-item .ac-country { font-size: 12px; color: var(--text-secondary); }
+
+/* DatePicker */
+.datepicker-wrap { position: relative; }
+.datepicker-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  padding: 16px;
+  z-index: 200;
+  width: 300px;
+  display: none;
+  animation: fadeIn .15s ease;
+}
+.datepicker-popup.show { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+.dp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.dp-header span { font-weight: 700; font-size: 15px; }
+.dp-nav {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition);
+}
+.dp-nav:hover { background: #F3F4F6; }
+.dp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+.dp-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.dp-day {
+  text-align: center;
+  padding: 8px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background var(--transition), color var(--transition);
+}
+.dp-day:hover:not(.disabled):not(.empty) { background: #EFF6FF; }
+.dp-day.today { font-weight: 700; color: var(--primary); }
+.dp-day.selected { background: var(--primary); color: #fff; font-weight: 700; }
+.dp-day.disabled { color: #D1D5DB; cursor: default; }
+.dp-day.empty { cursor: default; }
+.dp-day.in-range { background: #DBEAFE; }
+
+/* ========== POPULAR DESTINATIONS ========== */
+.section-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 32px 0 16px;
+}
+.popular-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+.dest-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+  box-shadow: var(--shadow);
+}
+.dest-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+.dest-emoji { font-size: 36px; margin-bottom: 8px; }
+.dest-name { font-size: 15px; font-weight: 600; }
+.dest-country { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+/* ========== MAIN LAYOUT ========== */
+.main-area {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 40px;
+}
+.results-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+/* Filters sidebar */
+.filters-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 80px;
+}
+.filter-group { margin-bottom: 20px; }
+.filter-group:last-child { margin-bottom: 0; }
+.filter-group h4 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+.filter-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 14px;
+  cursor: pointer;
+}
+.filter-check input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
+.price-inputs { display: flex; gap: 8px; align-items: center; }
+.price-inputs input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+}
+.price-inputs input:focus { border-color: var(--primary); }
+.price-inputs span { color: var(--text-secondary); font-size: 13px; }
+.star-filter {
+  display: flex;
+  gap: 4px;
+}
+.star-btn {
+  background: #F3F4F6;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.star-btn:hover { border-color: var(--primary-light); }
+.star-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.filter-apply {
+  width: 100%;
+  padding: 10px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
+}
+.filter-apply:hover { background: var(--primary-dark); }
+
+/* Results */
+.results-main { flex: 1; min-width: 0; }
+.results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.results-count { font-size: 15px; color: var(--text-secondary); }
+.results-count strong { color: var(--text); }
+.sort-select {
+  padding: 8px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+}
+
+/* Hotel card */
+.hotel-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  display: flex;
+  overflow: hidden;
+  margin-bottom: 16px;
+  transition: box-shadow var(--transition), transform var(--transition);
+  cursor: pointer;
+}
+.hotel-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+.hotel-img {
+  width: 260px;
+  min-height: 200px;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.hotel-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .3s ease;
+}
+.hotel-card:hover .hotel-img img { transform: scale(1.05); }
+.hotel-type-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(0,0,0,.6);
+  color: #fff;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.hotel-info {
+  flex: 1;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.hotel-name {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.hotel-addr {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.hotel-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.rating-badge {
+  background: var(--primary);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.review-count { font-size: 12px; color: var(--text-secondary); }
+.hotel-amenities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.amenity-tag {
+  background: #EFF6FF;
+  color: var(--primary);
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.hotel-desc {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.hotel-price-section {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.price-left {}
+.lowest-label { font-size: 12px; color: var(--text-secondary); }
+.lowest-price {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.lowest-provider { font-size: 12px; color: var(--text-secondary); }
+.price-compare-btn {
+  background: #fff;
+  border: 1.5px solid var(--primary);
+  color: var(--primary);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+.price-compare-btn:hover {
+  background: var(--primary);
+  color: #fff;
+}
+
+/* ========== MODAL ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s, visibility .2s;
+}
+.modal-overlay.show { opacity: 1; visibility: visible; }
+.modal {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  width: 560px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0,0,0,.25);
+  transform: scale(.95);
+  transition: transform .2s;
+}
+.modal-overlay.show .modal { transform: scale(1); }
+.modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.modal-hotel-name { font-size: 18px; font-weight: 700; }
+.modal-hotel-dest { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: var(--text-secondary);
+  padding: 0 4px;
+  line-height: 1;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 20px 24px; }
+.modal-dates {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+  display: flex;
+  gap: 12px;
+}
+.ota-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  transition: border-color var(--transition);
+}
+.ota-row:hover { border-color: var(--primary-light); }
+.ota-row.cheapest { border-color: var(--primary); background: #EFF6FF; }
+.ota-left { display: flex; align-items: center; gap: 12px; }
+.ota-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ota-name { font-weight: 600; font-size: 15px; }
+.cheapest-badge {
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.ota-right { display: flex; align-items: center; gap: 16px; }
+.ota-prices { text-align: right; }
+.ota-original {
+  font-size: 12px;
+  color: #9CA3AF;
+  text-decoration: line-through;
+}
+.ota-current {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.ota-row.cheapest .ota-current { color: var(--primary); }
+.ota-total { font-size: 11px; color: var(--text-secondary); }
+.ota-book {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity var(--transition);
+}
+.ota-book:hover { opacity: .9; }
+
+/* Unavailable message */
+.ota-unavailable {
+  padding: 14px 16px;
+  border: 1.5px dashed #D1D5DB;
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+/* Loading spinner */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2.5px solid #E5E7EB;
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+.loading-overlay .spinner { width: 36px; height: 36px; }
+
+/* No results */
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+.no-results-icon { font-size: 48px; margin-bottom: 16px; }
+.no-results h3 { font-size: 18px; color: var(--text); margin-bottom: 8px; }
+
+/* ========== FOOTER ========== */
+.footer {
+  background: #1F2937;
+  color: #9CA3AF;
+  text-align: center;
+  padding: 24px;
+  font-size: 13px;
+  margin-top: 40px;
+}
+.footer a { color: #60A5FA; }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 900px) {
+  .results-layout { flex-direction: column; }
+  .filters-sidebar { width: 100%; position: static; }
+  .hotel-img { width: 200px; }
+}
+@media (max-width: 600px) {
+  .header-inner { padding: 12px 16px 0; }
+  .logo { font-size: 22px; }
+  .tab-bar { padding: 8px 16px 0; }
+  .search-section { padding: 16px 16px 0; }
+  .search-box { flex-direction: column; padding: 16px; }
+  .search-field { min-width: 100%; }
+  .search-btn { width: 100%; }
+  .main-area { padding: 0 16px 32px; }
+  .hotel-card { flex-direction: column; }
+  .hotel-img { width: 100%; min-height: 180px; max-height: 200px; }
+  .popular-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+  .dest-card { padding: 14px 8px; }
+  .dest-emoji { font-size: 28px; }
+  .modal { width: 100%; max-width: 100vw; border-radius: 16px 16px 0 0; position: fixed; bottom: 0; max-height: 85vh; }
+  .datepicker-popup { left: -40px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-inner">
+    <div>
+      <div class="logo">Stay<span>Finder</span></div>
+      <div class="header-sub">최저가 숙소를 한눈에 비교하세요</div>
+    </div>
+  </div>
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="domestic">국내</button>
+    <button class="tab-btn" data-tab="international">해외</button>
+  </div>
+</header>
+
+<!-- Search -->
+<section class="search-section">
+  <div class="search-box">
+    <div class="search-field" style="flex:1.5;">
+      <label>여행지</label>
+      <div class="autocomplete-wrap">
+        <input type="text" id="destInput" placeholder="도시명을 입력하세요" autocomplete="off">
+        <div class="autocomplete-list" id="acList"></div>
+      </div>
+    </div>
+    <div class="search-field">
+      <label>체크인</label>
+      <div class="datepicker-wrap">
+        <input type="text" id="checkinInput" placeholder="날짜 선택" readonly>
+        <div class="datepicker-popup" id="checkinPicker"></div>
+      </div>
+    </div>
+    <div class="search-field">
+      <label>체크아웃</label>
+      <div class="datepicker-wrap">
+        <input type="text" id="checkoutInput" placeholder="날짜 선택" readonly>
+        <div class="datepicker-popup" id="checkoutPicker"></div>
+      </div>
+    </div>
+    <div class="search-field" style="flex:.6;min-width:100px;">
+      <label>인원</label>
+      <select id="guestSelect">
+        <option value="1">1명</option>
+        <option value="2" selected>2명</option>
+        <option value="3">3명</option>
+        <option value="4">4명</option>
+        <option value="5+">5명+</option>
+      </select>
+    </div>
+    <button class="search-btn" id="searchBtn">검색</button>
+  </div>
+</section>
+
+<!-- Main content -->
+<div class="main-area">
+  <!-- Popular destinations -->
+  <div id="popularSection">
+    <h2 class="section-title" id="popularTitle">인기 여행지</h2>
+    <div class="popular-grid" id="popularGrid"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsSection" style="display:none;">
+    <div class="results-layout">
+      <!-- Filters -->
+      <aside class="filters-sidebar">
+        <div class="filter-group">
+          <h4>숙소 유형</h4>
+          <label class="filter-check"><input type="checkbox" value="hotel" checked> 호텔</label>
+          <label class="filter-check"><input type="checkbox" value="resort" checked> 리조트</label>
+          <label class="filter-check"><input type="checkbox" value="pension" checked> 펜션</label>
+        </div>
+        <div class="filter-group">
+          <h4>1박 가격대</h4>
+          <div class="price-inputs">
+            <input type="number" id="filterMinPrice" placeholder="최소" step="10000">
+            <span>~</span>
+            <input type="number" id="filterMaxPrice" placeholder="최대" step="10000">
+          </div>
+        </div>
+        <div class="filter-group">
+          <h4>평점</h4>
+          <div class="star-filter">
+            <button class="star-btn" data-rating="0">전체</button>
+            <button class="star-btn" data-rating="4.0">4.0+</button>
+            <button class="star-btn active" data-rating="0">4.3+</button>
+            <button class="star-btn" data-rating="4.5">4.5+</button>
+          </div>
+        </div>
+        <button class="filter-apply" id="filterApplyBtn">필터 적용</button>
+      </aside>
+
+      <!-- Hotel results -->
+      <div class="results-main">
+        <div class="results-header">
+          <div class="results-count" id="resultsCount"></div>
+          <select class="sort-select" id="sortSelect">
+            <option value="price">가격 낮은순</option>
+            <option value="rating">평점 높은순</option>
+            <option value="name">이름순</option>
+          </select>
+        </div>
+        <div id="hotelList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  StayFinder &copy; 2026. 실제 예약은 각 OTA 사이트에서 진행됩니다. 표시 가격은 참고용이며 실제 가격과 다를 수 있습니다.
+</footer>
+
+<script>
+// ====================== DATA ======================
+const DESTINATIONS = [
+  {name:"서울",name_en:"Seoul",category:"domestic",country:"한국",popular:true},
+  {name:"부산",name_en:"Busan",category:"domestic",country:"한국",popular:true},
+  {name:"제주",name_en:"Jeju",category:"domestic",country:"한국",popular:true},
+  {name:"강릉",name_en:"Gangneung",category:"domestic",country:"한국",popular:true},
+  {name:"경주",name_en:"Gyeongju",category:"domestic",country:"한국",popular:true},
+  {name:"여수",name_en:"Yeosu",category:"domestic",country:"한국",popular:true},
+  {name:"속초",name_en:"Sokcho",category:"domestic",country:"한국"},
+  {name:"전주",name_en:"Jeonju",category:"domestic",country:"한국"},
+  {name:"대구",name_en:"Daegu",category:"domestic",country:"한국"},
+  {name:"인천",name_en:"Incheon",category:"domestic",country:"한국"},
+  {name:"광주",name_en:"Gwangju",category:"domestic",country:"한국"},
+  {name:"대전",name_en:"Daejeon",category:"domestic",country:"한국"},
+  {name:"울산",name_en:"Ulsan",category:"domestic",country:"한국"},
+  {name:"수원",name_en:"Suwon",category:"domestic",country:"한국"},
+  {name:"춘천",name_en:"Chuncheon",category:"domestic",country:"한국"},
+  {name:"가평",name_en:"Gapyeong",category:"domestic",country:"한국"},
+  {name:"양양",name_en:"Yangyang",category:"domestic",country:"한국"},
+  {name:"통영",name_en:"Tongyeong",category:"domestic",country:"한국"},
+  {name:"거제",name_en:"Geoje",category:"domestic",country:"한국"},
+  {name:"남해",name_en:"Namhae",category:"domestic",country:"한국"},
+  {name:"목포",name_en:"Mokpo",category:"domestic",country:"한국"},
+  {name:"안동",name_en:"Andong",category:"domestic",country:"한국"},
+  {name:"포항",name_en:"Pohang",category:"domestic",country:"한국"},
+  {name:"순천",name_en:"Suncheon",category:"domestic",country:"한국"},
+  {name:"평창",name_en:"Pyeongchang",category:"domestic",country:"한국"},
+  {name:"담양",name_en:"Damyang",category:"domestic",country:"한국"},
+  {name:"도쿄",name_en:"Tokyo",category:"international",country:"일본",popular:true},
+  {name:"오사카",name_en:"Osaka",category:"international",country:"일본",popular:true},
+  {name:"방콕",name_en:"Bangkok",category:"international",country:"태국",popular:true},
+  {name:"다낭",name_en:"Da Nang",category:"international",country:"베트남",popular:true},
+  {name:"싱가포르",name_en:"Singapore",category:"international",country:"싱가포르"},
+  {name:"하와이",name_en:"Hawaii",category:"international",country:"미국"},
+  {name:"파리",name_en:"Paris",category:"international",country:"프랑스"},
+  {name:"런던",name_en:"London",category:"international",country:"영국"},
+  {name:"뉴욕",name_en:"New York",category:"international",country:"미국"},
+  {name:"세부",name_en:"Cebu",category:"international",country:"필리핀"},
+  {name:"발리",name_en:"Bali",category:"international",country:"인도네시아"},
+  {name:"후쿠오카",name_en:"Fukuoka",category:"international",country:"일본"},
+  {name:"타이베이",name_en:"Taipei",category:"international",country:"대만"},
+  {name:"홍콩",name_en:"Hong Kong",category:"international",country:"홍콩"},
+];
+
+const HOTELS = [
+  // 서울 (8)
+  {id:"SEL001",name:"롯데호텔 서울",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.6,review_count:12840,address:"서울 중구 을지로 30",description:"5성급 럭셔리",amenities:["수영장","피트니스","스파","레스토랑","주차"],base_price:280000,image:"photo-1566073771259-6a8506099945"},
+  {id:"SEL002",name:"신라호텔",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.7,review_count:9560,address:"서울 중구 동호로 249",description:"최고 전통 럭셔리",amenities:["수영장","피트니스","스파","레스토랑","면세점"],base_price:350000,image:"photo-1455587734955-081b22074882"},
+  {id:"SEL003",name:"포시즌스 호텔 서울",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.8,review_count:5420,address:"서울 종로구 새문안로 97",description:"광화문 최고급",amenities:["수영장","피트니스","스파","레스토랑","바"],base_price:450000,image:"photo-1561501900-3701fa6a0864"},
+  {id:"SEL004",name:"나인트리 프리미어 명동",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:18320,address:"서울 중구 마른내로 28",description:"명동 가성비",amenities:["피트니스","레스토랑","주차","세탁"],base_price:120000,image:"photo-1551882547-ff40c63fe5fa"},
+  {id:"SEL005",name:"스테이 호텔 강남",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.0,review_count:7650,address:"서울 강남구 테헤란로 134",description:"비즈니스",amenities:["피트니스","카페","주차","회의실"],base_price:95000,image:"photo-1590490360182-c33d57733427"},
+  {id:"SEL006",name:"호텔 그레이스리 서울 명동",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.3,review_count:6210,address:"서울 중구 퇴계로 128",description:"일본 체인",amenities:["레스토랑","카페","세탁"],base_price:135000,image:"photo-1618773928121-c32242e63f39"},
+  {id:"SEL007",name:"JW 메리어트 동대문 스퀘어",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.6,review_count:8430,address:"서울 종로구 청계천로 279",description:"DDP 프리미엄",amenities:["수영장","피트니스","스파","레스토랑","주차"],base_price:310000,image:"photo-1542314831-de9b0a31f609"},
+  {id:"SEL008",name:"글래드 마포",destination:"서울",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:5670,address:"서울 마포구 마포대로 92",description:"공덕역 직결",amenities:["피트니스","레스토랑","주차"],base_price:105000,image:"photo-1596178065887-1198b6148b2b"},
+  // 부산 (5)
+  {id:"BUS001",name:"파라다이스호텔 부산",destination:"부산",category:"domestic",hotel_type:"resort",rating:4.5,review_count:11200,address:"부산 해운대구 해운대해변로 296",description:"해운대 오션뷰",amenities:["수영장","카지노","스파","레스토랑","해변"],base_price:300000,image:"photo-1540541338287-41700207dee6"},
+  {id:"BUS002",name:"시그니엘 부산",destination:"부산",category:"domestic",hotel_type:"hotel",rating:4.7,review_count:4820,address:"부산 해운대구 달맞이길 30",description:"LCT 초고층",amenities:["수영장","피트니스","스파","레스토랑","오션뷰"],base_price:380000,image:"photo-1520250497591-112f2f40a3f4"},
+  {id:"BUS003",name:"해운대그랜드호텔",destination:"부산",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:15600,address:"부산 해운대구 해운대해변로 217",description:"해변 앞",amenities:["수영장","피트니스","레스토랑","주차"],base_price:180000,image:"photo-1537572263959-54ac5b117d17"},
+  {id:"BUS004",name:"호메르스 호텔",destination:"부산",category:"domestic",hotel_type:"hotel",rating:4.3,review_count:8930,address:"부산 해운대구 해운대로 570번길 46",description:"감성 부티크",amenities:["레스토랑","카페","루프탑","주차"],base_price:150000,image:"photo-1584132967334-10e028bd69f7"},
+  {id:"BUS005",name:"힐튼 부산",destination:"부산",category:"domestic",hotel_type:"hotel",rating:4.4,review_count:6340,address:"부산 기장군 기장읍 기장해안로 268-32",description:"기장 해변",amenities:["수영장","스파","해변","레스토랑","키즈존"],base_price:250000,image:"photo-1564501049412-61c2a3083791"},
+  // 제주 (6)
+  {id:"JEJ001",name:"롯데호텔 제주",destination:"제주",category:"domestic",hotel_type:"resort",rating:4.4,review_count:13500,address:"제주 서귀포시 중문관광로 72번길 35",description:"중문 리조트",amenities:["수영장","골프","스파","레스토랑","키즈존"],base_price:250000,image:"photo-1582719508461-905c673771fd"},
+  {id:"JEJ002",name:"해비치호텔 앤 리조트",destination:"제주",category:"domestic",hotel_type:"resort",rating:4.5,review_count:9870,address:"제주 서귀포시 표선면 민속해안로 537",description:"한화 프리미엄",amenities:["수영장","피트니스","스파","레스토랑","자전거"],base_price:220000,image:"photo-1445019980597-93fa8acb246c"},
+  {id:"JEJ003",name:"제주신라호텔",destination:"제주",category:"domestic",hotel_type:"hotel",rating:4.6,review_count:7640,address:"제주 서귀포시 중문관광로 72번길 75",description:"5성급",amenities:["수영장","스파","골프","레스토랑","해변"],base_price:320000,image:"photo-1563911302283-d2bc129e7570"},
+  {id:"JEJ004",name:"제주 탐나라 리퍼블릭",destination:"제주",category:"domestic",hotel_type:"pension",rating:4.1,review_count:3210,address:"제주 제주시 탑동로 2길 8",description:"감성 독채",amenities:["바베큐","주차","정원","와이파이"],base_price:85000,image:"photo-1587061949409-02df41d5e562"},
+  {id:"JEJ005",name:"그랜드 하얏트 제주",destination:"제주",category:"domestic",hotel_type:"hotel",rating:4.7,review_count:3890,address:"제주 제주시 노형동 925",description:"신시가지 럭셔리",amenities:["수영장","피트니스","스파","레스토랑","바"],base_price:400000,image:"photo-1571003123894-1f0594d2b5d9"},
+  {id:"JEJ006",name:"플레이스캠프 제주",destination:"제주",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:5640,address:"제주 제주시 탑동해안로 66",description:"힙한 디자인",amenities:["카페","루프탑","자전거","주차"],base_price:110000,image:"photo-1580041065738-e72023775cdc"},
+  // 강릉 (3)
+  {id:"GAN001",name:"씨마크호텔 강릉",destination:"강릉",category:"domestic",hotel_type:"resort",rating:4.4,review_count:6540,address:"강원 강릉시 해안로 406번길 2",description:"오션뷰 리조트",amenities:["수영장","스파","레스토랑","해변","워터파크"],base_price:200000,image:"photo-1544124499-58912cbddaad"},
+  {id:"GAN002",name:"세인트존스호텔 강릉",destination:"강릉",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:5120,address:"강원 강릉시 창해로 307",description:"경포대 근처",amenities:["피트니스","레스토랑","주차","해변"],base_price:160000,image:"photo-1559599238-308793637427"},
+  {id:"GAN003",name:"스카이베이 경포",destination:"강릉",category:"domestic",hotel_type:"resort",rating:4.3,review_count:7890,address:"강원 강릉시 해안로 514",description:"워터파크 리조트",amenities:["워터파크","수영장","키즈존","레스토랑"],base_price:180000,image:"photo-1522798514-97ceb8c4f1c8"},
+  // 경주 (3)
+  {id:"GYE001",name:"힐튼 경주",destination:"경주",category:"domestic",hotel_type:"hotel",rating:4.3,review_count:8760,address:"경북 경주시 보문로 484-7",description:"보문단지",amenities:["수영장","피트니스","골프","레스토랑"],base_price:170000,image:"photo-1549294413-26f195471e71"},
+  {id:"GYE002",name:"코모도호텔 경주",destination:"경주",category:"domestic",hotel_type:"hotel",rating:4.0,review_count:5430,address:"경북 경주시 보문로 422",description:"보문호수 전망",amenities:["수영장","피트니스","레스토랑","자전거"],base_price:130000,image:"photo-1551016043-93ae65f4c88c"},
+  {id:"GYE003",name:"경주 라한호텔",destination:"경주",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:4320,address:"경북 경주시 보문로 338",description:"가성비 리조트",amenities:["수영장","레스토랑","주차","자전거"],base_price:110000,image:"photo-1512918728675-ed5a9ecdebfd"},
+  // 여수 (3)
+  {id:"YEO001",name:"디오션리조트 여수",destination:"여수",category:"domestic",hotel_type:"resort",rating:4.3,review_count:7890,address:"전남 여수시 오동도로 61-11",description:"오동도 오션뷰",amenities:["수영장","스파","레스토랑","오션뷰"],base_price:190000,image:"photo-1578683010236-d716f9a3f461"},
+  {id:"YEO002",name:"히든베이호텔 여수",destination:"여수",category:"domestic",hotel_type:"hotel",rating:4.4,review_count:5640,address:"전남 여수시 돌산읍 무술목길 142",description:"돌산 바다",amenities:["수영장","레스토랑","오션뷰","주차"],base_price:220000,image:"photo-1568084680786-a84f91d1153c"},
+  {id:"YEO003",name:"MVL호텔 여수",destination:"여수",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:6780,address:"전남 여수시 오동도로 111",description:"여수엑스포역 앞",amenities:["피트니스","레스토랑","주차","카페"],base_price:120000,image:"photo-1606402179428-a57976d71fa4"},
+  // 속초 (2)
+  {id:"SOK001",name:"마리나베이 속초",destination:"속초",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:4560,address:"강원 속초시 중앙로 118",description:"해변 앞",amenities:["피트니스","레스토랑","오션뷰","주차"],base_price:140000,image:"photo-1496417263034-38ec4f0b665a"},
+  {id:"SOK002",name:"롯데리조트 속초",destination:"속초",category:"domestic",hotel_type:"resort",rating:4.3,review_count:8900,address:"강원 속초시 대포항길 186",description:"설악산+동해",amenities:["수영장","워터파크","피트니스","레스토랑"],base_price:180000,image:"photo-1585409677983-0f6c2e0b3ffd"},
+  // 전주 (2)
+  {id:"JNJ001",name:"라한호텔 전주",destination:"전주",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:5670,address:"전북 전주시 완산구 기린대로 85",description:"한옥마을 근처",amenities:["수영장","피트니스","레스토랑","주차"],base_price:140000,image:"photo-1551882547-ff40c63fe5fa?seed=jnj"},
+  {id:"JNJ002",name:"전주 한옥 스테이",destination:"전주",category:"domestic",hotel_type:"pension",rating:4.5,review_count:3210,address:"전북 전주시 완산구 은행로 56",description:"전통 한옥",amenities:["정원","전통차","주차","와이파이"],base_price:95000,image:"photo-1578683010236-d716f9a3f461?seed=jnj2"},
+  // 대구 (2)
+  {id:"DGU001",name:"인터불고 호텔 대구",destination:"대구",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:6540,address:"대구 수성구 팔현길 212",description:"최대 규모",amenities:["수영장","골프","피트니스","레스토랑"],base_price:150000,image:"photo-1566073771259-6a8506099945?seed=dgu"},
+  {id:"DGU002",name:"노보텔 앰배서더 대구",destination:"대구",category:"domestic",hotel_type:"hotel",rating:4.3,review_count:4560,address:"대구 중구 국채보상로 611",description:"동성로 중심",amenities:["피트니스","레스토랑","주차","회의실"],base_price:130000,image:"photo-1520250497591-112f2f40a3f4?seed=dgu2"},
+  // 인천 (2)
+  {id:"ICN001",name:"네스트호텔 인천",destination:"인천",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:7890,address:"인천 중구 영종해안남로 186",description:"영종도 해변",amenities:["수영장","스파","레스토랑","해변"],base_price:170000,image:"photo-1564501049412-61c2a3083791?seed=icn"},
+  {id:"ICN002",name:"파라다이스시티 인천",destination:"인천",category:"domestic",hotel_type:"resort",rating:4.5,review_count:9120,address:"인천 중구 영종해안남로 321대로 186",description:"복합리조트",amenities:["수영장","카지노","스파","레스토랑","클럽"],base_price:300000,image:"photo-1455587734955-081b22074882?seed=icn2"},
+  // 광주 (1)
+  {id:"GWJ001",name:"홀리데이인 광주",destination:"광주",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:4320,address:"광주 서구 상무중앙로 38",description:"상무지구",amenities:["피트니스","레스토랑","주차","회의실"],base_price:120000,image:"photo-1590490360182-c33d57733427?seed=gwj"},
+  // 대전 (2)
+  {id:"DJN001",name:"ICC호텔 대전",destination:"대전",category:"domestic",hotel_type:"hotel",rating:4.0,review_count:5430,address:"대전 유성구 엑스포로 1",description:"컨벤션센터",amenities:["피트니스","레스토랑","주차","회의실"],base_price:110000,image:"photo-1596178065887-1198b6148b2b?seed=djn"},
+  {id:"DJN002",name:"유성호텔 대전",destination:"대전",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:6780,address:"대전 유성구 온천로 77",description:"유성온천",amenities:["온천","스파","레스토랑","주차"],base_price:140000,image:"photo-1551016043-93ae65f4c88c?seed=djn2"},
+  // 울산 (1)
+  {id:"ULS001",name:"롯데호텔 울산",destination:"울산",category:"domestic",hotel_type:"hotel",rating:4.3,review_count:5120,address:"울산 남구 삼산로 282",description:"시내 중심",amenities:["피트니스","레스토랑","주차","스파"],base_price:160000,image:"photo-1542314831-de9b0a31f609?seed=uls"},
+  // 수원 (1)
+  {id:"SWN001",name:"노보텔 앰배서더 수원",destination:"수원",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:4890,address:"경기 수원시 팔달구 중부대로 141",description:"수원역 앞",amenities:["피트니스","레스토랑","주차","회의실"],base_price:130000,image:"photo-1618773928121-c32242e63f39?seed=swn"},
+  // 춘천 (2)
+  {id:"CCN001",name:"세종호텔 춘천",destination:"춘천",category:"domestic",hotel_type:"hotel",rating:4.0,review_count:3450,address:"강원 춘천시 봉의산길 31",description:"시내 중심",amenities:["레스토랑","주차","카페"],base_price:90000,image:"photo-1584132967334-10e028bd69f7?seed=ccn"},
+  {id:"CCN002",name:"엘리시안 강촌 리조트",destination:"춘천",category:"domestic",hotel_type:"resort",rating:4.3,review_count:8760,address:"강원 춘천시 남산면 북한강변길 688",description:"강촌 스키+골프",amenities:["스키","골프","수영장","레스토랑"],base_price:160000,image:"photo-1496417263034-38ec4f0b665a?seed=ccn2"},
+  // 가평 (2)
+  {id:"GPY001",name:"아난티 코브 가평",destination:"가평",category:"domestic",hotel_type:"resort",rating:4.6,review_count:4560,address:"경기 가평군 설악면 유명로 1720",description:"북한강변 프리미엄",amenities:["수영장","스파","레스토랑","골프","카페"],base_price:280000,image:"photo-1561501900-3701fa6a0864?seed=gpy"},
+  {id:"GPY002",name:"가평 숲속 펜션",destination:"가평",category:"domestic",hotel_type:"pension",rating:4.2,review_count:2340,address:"경기 가평군 청평면 고재길 42",description:"독채 계곡",amenities:["바베큐","계곡","정원","주차"],base_price:75000,image:"photo-1587061949409-02df41d5e562?seed=gpy2"},
+  // 양양 (2)
+  {id:"YYG001",name:"쏠비치 양양",destination:"양양",category:"domestic",hotel_type:"resort",rating:4.3,review_count:7650,address:"강원 양양군 손양면 동해대로 2623",description:"워터파크",amenities:["워터파크","수영장","해변","레스토랑"],base_price:190000,image:"photo-1540541338287-41700207dee6?seed=yyg"},
+  {id:"YYG002",name:"서피비치 양양",destination:"양양",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:5430,address:"강원 양양군 현북면 하조대해안길 119",description:"서핑 해변",amenities:["서핑","해변","카페","주차"],base_price:120000,image:"photo-1537572263959-54ac5b117d17?seed=yyg2"},
+  // 통영 (2)
+  {id:"TYG001",name:"스탠포드호텔 통영",destination:"통영",category:"domestic",hotel_type:"hotel",rating:4.2,review_count:4560,address:"경남 통영시 도남로 257",description:"한려수도 전망",amenities:["레스토랑","카페","주차","오션뷰"],base_price:140000,image:"photo-1559599238-308793637427?seed=tyg"},
+  {id:"TYG002",name:"통영 마리나 리조트",destination:"통영",category:"domestic",hotel_type:"resort",rating:4.4,review_count:3890,address:"경남 통영시 산양읍 산양관광로 1",description:"요트 마리나",amenities:["수영장","요트","레스토랑","해변"],base_price:200000,image:"photo-1522798514-97ceb8c4f1c8?seed=tyg2"},
+  // 거제 (1)
+  {id:"GJE001",name:"거제 삼성 리조트",destination:"거제",category:"domestic",hotel_type:"resort",rating:4.3,review_count:6540,address:"경남 거제시 거제대로 3731",description:"남해바다 전망",amenities:["수영장","골프","레스토랑","해변"],base_price:180000,image:"photo-1580041065738-e72023775cdc?seed=gje"},
+  // 남해 (1)
+  {id:"NMH001",name:"힐튼남해 골프&리조트",destination:"남해",category:"domestic",hotel_type:"resort",rating:4.4,review_count:5430,address:"경남 남해군 남면 남해대로 958",description:"바다+골프",amenities:["골프","수영장","레스토랑","오션뷰"],base_price:200000,image:"photo-1445019980597-93fa8acb246c?seed=nmh"},
+  // 목포 (1)
+  {id:"MKP001",name:"샹그리라 목포",destination:"목포",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:3450,address:"전남 목포시 평화로 81",description:"유달산 뷰",amenities:["레스토랑","주차","카페","피트니스"],base_price:100000,image:"photo-1549294413-26f195471e71?seed=mkp"},
+  // 안동 (1)
+  {id:"AND001",name:"안동 그랜드호텔",destination:"안동",category:"domestic",hotel_type:"hotel",rating:4.0,review_count:2340,address:"경북 안동시 경동로 743",description:"하회마을 근처",amenities:["레스토랑","주차","정원"],base_price:90000,image:"photo-1578683010236-d716f9a3f461?seed=and"},
+  // 포항 (1)
+  {id:"POH001",name:"라한호텔 포항",destination:"포항",category:"domestic",hotel_type:"hotel",rating:4.1,review_count:3890,address:"경북 포항시 북구 해안로 12",description:"영일대해변",amenities:["레스토랑","주차","오션뷰","카페"],base_price:120000,image:"photo-1544124499-58912cbddaad?seed=poh"},
+  // 순천 (1)
+  {id:"SCN001",name:"순천 가든호텔",destination:"순천",category:"domestic",hotel_type:"hotel",rating:4.0,review_count:2890,address:"전남 순천시 장명로 55",description:"순천만 국가정원",amenities:["레스토랑","주차","정원"],base_price:85000,image:"photo-1568084680786-a84f91d1153c?seed=scn"},
+  // 평창 (2)
+  {id:"PCG001",name:"알펜시아 리조트",destination:"평창",category:"domestic",hotel_type:"resort",rating:4.3,review_count:8760,address:"강원 평창군 대관령면 솔봉로 325",description:"올림픽 스키",amenities:["스키","골프","수영장","레스토랑"],base_price:180000,image:"photo-1496417263034-38ec4f0b665a?seed=pcg"},
+  {id:"PCG002",name:"용평리조트",destination:"평창",category:"domestic",hotel_type:"resort",rating:4.2,review_count:12340,address:"강원 평창군 대관령면 올림픽로 715",description:"최초 스키",amenities:["스키","골프","워터파크","레스토랑"],base_price:150000,image:"photo-1585409677983-0f6c2e0b3ffd?seed=pcg2"},
+  // 담양 (1)
+  {id:"DMY001",name:"담양 리조트 스파",destination:"담양",category:"domestic",hotel_type:"resort",rating:4.1,review_count:3210,address:"전남 담양군 금성면 금성로 882",description:"대나무 숲 온천",amenities:["온천","스파","레스토랑","정원"],base_price:130000,image:"photo-1606402179428-a57976d71fa4?seed=dmy"},
+  // === International ===
+  // 도쿄 (4)
+  {id:"TKY001",name:"더 프린스 갤러리 도쿄",destination:"도쿄",category:"international",hotel_type:"hotel",rating:4.7,review_count:6840,address:"Kioicho 1-2 Chiyoda-ku Tokyo",description:"도쿄타워 전망 럭셔리",amenities:["수영장","스파","레스토랑","피트니스","바"],base_price:380000,image:"photo-1542314831-de9b0a31f609?seed=tky1"},
+  {id:"TKY002",name:"시부야 스트림 엑셀호텔 도큐",destination:"도쿄",category:"international",hotel_type:"hotel",rating:4.3,review_count:9210,address:"Shibuya 3-21-3 Shibuya-ku Tokyo",description:"시부야역 직결",amenities:["레스토랑","카페","피트니스"],base_price:180000,image:"photo-1551882547-ff40c63fe5fa?seed=tky2"},
+  {id:"TKY003",name:"도쿄 스테이 신주쿠",destination:"도쿄",category:"international",hotel_type:"hotel",rating:4.0,review_count:14320,address:"Shinjuku 7-27-9 Shinjuku-ku Tokyo",description:"신주쿠 가성비",amenities:["세탁","와이파이","주방"],base_price:95000,image:"photo-1590490360182-c33d57733427?seed=tky3"},
+  {id:"TKY004",name:"호텔 그레이서리 신주쿠",destination:"도쿄",category:"international",hotel_type:"hotel",rating:4.2,review_count:11540,address:"Kabukicho 1-19-1 Shinjuku-ku Tokyo",description:"고질라 호텔",amenities:["레스토랑","카페","와이파이"],base_price:120000,image:"photo-1606402179428-a57976d71fa4?seed=tky4"},
+  // 오사카 (3)
+  {id:"OSA001",name:"스위스호텔 난카이 오사카",destination:"오사카",category:"international",hotel_type:"hotel",rating:4.5,review_count:8970,address:"Namba 5-1-60 Chuo-ku Osaka",description:"난바역 직결",amenities:["수영장","피트니스","스파","레스토랑"],base_price:220000,image:"photo-1455587734955-081b22074882?seed=osa1"},
+  {id:"OSA002",name:"크로스호텔 오사카",destination:"오사카",category:"international",hotel_type:"hotel",rating:4.3,review_count:7650,address:"Shinsaibashisuji 2-5-15 Chuo-ku Osaka",description:"신사이바시 디자인",amenities:["레스토랑","바","피트니스"],base_price:140000,image:"photo-1618773928121-c32242e63f39?seed=osa2"},
+  {id:"OSA003",name:"호텔 몬토레 그라스미어 오사카",destination:"오사카",category:"international",hotel_type:"hotel",rating:4.1,review_count:5430,address:"Nanbanaka 2-2-2 Naniwa-ku Osaka",description:"난바 JR역 앞",amenities:["레스토랑","스파","피트니스"],base_price:110000,image:"photo-1512918728675-ed5a9ecdebfd?seed=osa3"},
+  // 방콕 (3)
+  {id:"BKK001",name:"만다린 오리엔탈 방콕",destination:"방콕",category:"international",hotel_type:"hotel",rating:4.8,review_count:5120,address:"48 Oriental Avenue Bangkok",description:"전설적 럭셔리",amenities:["수영장","스파","레스토랑","리버뷰","보트"],base_price:350000,image:"photo-1566073771259-6a8506099945?seed=bkk1"},
+  {id:"BKK002",name:"센타라 그랜드 앳 센트럴월드",destination:"방콕",category:"international",hotel_type:"hotel",rating:4.4,review_count:9870,address:"999/99 Rama 1 Road Bangkok",description:"센트럴월드 직결",amenities:["수영장","피트니스","스파","레스토랑"],base_price:150000,image:"photo-1571003123894-1f0594d2b5d9?seed=bkk2"},
+  {id:"BKK003",name:"이비스 방콕 시암",destination:"방콕",category:"international",hotel_type:"hotel",rating:3.9,review_count:16540,address:"927 Rama 1 Road Bangkok",description:"시암역 가성비",amenities:["레스토랑","와이파이","세탁"],base_price:55000,image:"photo-1520250497591-112f2f40a3f4?seed=bkk3"},
+  // 다낭 (3)
+  {id:"DAN001",name:"인터컨티넨탈 다낭 선 페닌슐라",destination:"다낭",category:"international",hotel_type:"resort",rating:4.8,review_count:6780,address:"Bai Bac Son Tra Da Nang",description:"초프리미엄",amenities:["수영장","스파","골프","해변","키즈클럽"],base_price:400000,image:"photo-1563911302283-d2bc129e7570?seed=dan1"},
+  {id:"DAN002",name:"하얏트 리젠시 다낭",destination:"다낭",category:"international",hotel_type:"resort",rating:4.5,review_count:8340,address:"5 Truong Sa Hoa Hai Da Nang",description:"5성급 리조트",amenities:["수영장","스파","레스토랑","해변","피트니스"],base_price:200000,image:"photo-1582719508461-905c673771fd?seed=dan2"},
+  {id:"DAN003",name:"알라카르테 다낭 비치",destination:"다낭",category:"international",hotel_type:"hotel",rating:4.2,review_count:11230,address:"200 Vo Nguyen Giap Da Nang",description:"가성비 4성급",amenities:["수영장","레스토랑","해변","피트니스"],base_price:90000,image:"photo-1540541338287-41700207dee6?seed=dan3"},
+  // 싱가포르 (2)
+  {id:"SIN001",name:"마리나베이 샌즈",destination:"싱가포르",category:"international",hotel_type:"hotel",rating:4.6,review_count:18920,address:"10 Bayfront Avenue Singapore",description:"랜드마크 인피니티풀",amenities:["인피니티풀","카지노","쇼핑","레스토랑","스파"],base_price:450000,image:"photo-1561501900-3701fa6a0864?seed=sin1"},
+  {id:"SIN002",name:"칼튼호텔 싱가포르",destination:"싱가포르",category:"international",hotel_type:"hotel",rating:4.3,review_count:7650,address:"76 Bras Basah Road Singapore",description:"시티홀역 앞",amenities:["수영장","피트니스","레스토랑"],base_price:200000,image:"photo-1596178065887-1198b6148b2b?seed=sin2"},
+  // 하와이 (1)
+  {id:"HWI001",name:"하얏트 리젠시 와이키키",destination:"하와이",category:"international",hotel_type:"resort",rating:4.4,review_count:9870,address:"2424 Kalakaua Ave Honolulu",description:"와이키키 비치",amenities:["수영장","스파","해변","레스토랑","루아우"],base_price:350000,image:"photo-1564501049412-61c2a3083791?seed=hwi1"},
+  // 파리 (1)
+  {id:"PAR001",name:"풀만 파리 투르 에펠",destination:"파리",category:"international",hotel_type:"hotel",rating:4.3,review_count:6540,address:"18 Avenue de Suffren Paris",description:"에펠탑 도보 5분",amenities:["레스토랑","바","피트니스","주차"],base_price:280000,image:"photo-1551016043-93ae65f4c88c?seed=par1"},
+  // 발리 (2)
+  {id:"BAL001",name:"더 물리아 발리",destination:"발리",category:"international",hotel_type:"resort",rating:4.7,review_count:7890,address:"Jl. Raya Nusa Dua Selatan Bali",description:"누사두아 올인클루시브",amenities:["수영장","스파","해변","레스토랑","키즈클럽"],base_price:280000,image:"photo-1445019980597-93fa8acb246c?seed=bal1"},
+  {id:"BAL002",name:"알리야 우붓",destination:"발리",category:"international",hotel_type:"resort",rating:4.5,review_count:5430,address:"Jl. Bisma Ubud Bali",description:"열대림 풀빌라",amenities:["인피니티풀","스파","요가","레스토랑"],base_price:200000,image:"photo-1580041065738-e72023775cdc?seed=bal2"},
+  // 세부 (1)
+  {id:"CEB001",name:"샹그릴라 막탄 리조트 앤 스파",destination:"세부",category:"international",hotel_type:"resort",rating:4.5,review_count:8760,address:"Punta Engano Road Cebu",description:"막탄섬 5성급",amenities:["수영장","스파","해변","다이빙","키즈클럽"],base_price:220000,image:"photo-1522798514-97ceb8c4f1c8?seed=ceb1"},
+  // 후쿠오카 (2)
+  {id:"FUK001",name:"그랜드 하얏트 후쿠오카",destination:"후쿠오카",category:"international",hotel_type:"hotel",rating:4.4,review_count:6210,address:"1-2-82 Sumiyoshi Hakata-ku Fukuoka",description:"캐널시티 직결",amenities:["수영장","스파","피트니스","레스토랑"],base_price:180000,image:"photo-1542314831-de9b0a31f609?seed=fuk1"},
+  {id:"FUK002",name:"호텔 포르자 하카타역",destination:"후쿠오카",category:"international",hotel_type:"hotel",rating:4.1,review_count:9870,address:"Hakata Ekimae 2-1-1 Fukuoka",description:"하카타역 앞 가성비",amenities:["레스토랑","세탁","와이파이"],base_price:80000,image:"photo-1584132967334-10e028bd69f7?seed=fuk2"},
+  // 타이베이 (1)
+  {id:"TPE001",name:"W 타이베이",destination:"타이베이",category:"international",hotel_type:"hotel",rating:4.5,review_count:5670,address:"No. 10 Zhongxiao E. Rd. Taipei",description:"신이구 트렌디",amenities:["수영장","바","피트니스","레스토랑"],base_price:250000,image:"photo-1520250497591-112f2f40a3f4?seed=tpe1"},
+  // 홍콩 (1)
+  {id:"HKG001",name:"더 페닌슐라 홍콩",destination:"홍콩",category:"international",hotel_type:"hotel",rating:4.8,review_count:4320,address:"Salisbury Road Kowloon Hong Kong",description:"침사추이 전설적",amenities:["수영장","스파","헬리패드","레스토랑","롤스로이스"],base_price:500000,image:"photo-1455587734955-081b22074882?seed=hkg1"},
+];
+
+const OTA_PROVIDERS = [
+  {name:"야놀자", color:"#FF3478"},
+  {name:"여기어때", color:"#FFC107"},
+  {name:"부킹닷컴", color:"#003580"},
+  {name:"아고다", color:"#5C2D91"},
+  {name:"호텔스닷컴", color:"#D32F2F"},
+  {name:"트립닷컴", color:"#287DFA"},
+];
+
+const DEST_EMOJI = {
+  "서울":"🏙️","부산":"🌊","제주":"🍊","강릉":"☕","경주":"🏛️","여수":"🌉",
+  "속초":"⛰️","전주":"🏯","대구":"🌸","인천":"✈️","광주":"🎨","대전":"🔬",
+  "울산":"🐋","수원":"🏰","춘천":"🍗","가평":"🏕️","양양":"🏄","통영":"⛵",
+  "거제":"🌅","남해":"🎣","목포":"🦑","안동":"📿","포항":"🦀","순천":"🦢",
+  "평창":"⛷️","담양":"🎋",
+  "도쿄":"🗼","오사카":"🏯","방콕":"🛕","다낭":"🏖️","싱가포르":"🦁",
+  "하와이":"🌺","파리":"🗼","런던":"🎡","뉴욕":"🗽","세부":"🤿",
+  "발리":"🌴","후쿠오카":"🍜","타이베이":"🧋","홍콩":"🌃",
+};
+
+// ====================== UTILITY FUNCTIONS ======================
+
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash);
+}
+
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xFFFFFFFF;
+    return (s >>> 0) / 0xFFFFFFFF;
+  };
+}
+
+function bookingUrl(provider, hotelName, destination, checkin, checkout) {
+  const name = encodeURIComponent(hotelName);
+  const dest = encodeURIComponent(destination);
+  switch (provider) {
+    case "야놀자": return `https://www.yanolja.com/search/${name}`;
+    case "여기어때": return `https://www.goodchoice.kr/product/search/2?keyword=${name}`;
+    case "부킹닷컴": return `https://www.booking.com/searchresults.ko.html?ss=${name}&checkin=${checkin}&checkout=${checkout}`;
+    case "아고다": return `https://www.agoda.com/ko-kr/search?textToSearch=${name}&checkIn=${checkin}&checkOut=${checkout}`;
+    case "호텔스닷컴": return `https://kr.hotels.com/search.do?q-destination=${name}&q-check-in=${checkin}&q-check-out=${checkout}`;
+    case "트립닷컴": return `https://kr.trip.com/hotels/list?keyword=${name}&city=${dest}&checkin=${checkin}&checkout=${checkout}`;
+    default: return `https://www.google.com/search?q=${name}+${dest}+호텔+예약`;
+  }
+}
+
+function generatePrices(hotel, checkin, checkout) {
+  const results = [];
+  for (const ota of OTA_PROVIDERS) {
+    const seed = simpleHash(`${hotel.id}:${ota.name}:${checkin}`);
+    const rng = seededRandom(seed);
+    const variation = 0.82 + rng() * 0.36;
+    const price = Math.round(hotel.base_price * variation / 1000) * 1000;
+    const hasDiscount = rng() < 0.35;
+    const originalPrice = hasDiscount ? Math.round(price * (1.1 + rng() * 0.2) / 1000) * 1000 : null;
+    const available = rng() < 0.88;
+    if (!available) continue;
+    results.push({
+      provider: ota.name,
+      price,
+      original_price: originalPrice,
+      url: bookingUrl(ota.name, hotel.name, hotel.destination, checkin, checkout),
+    });
+  }
+  return results.sort((a, b) => a.price - b.price);
+}
+
+function searchHotels(params) {
+  let candidates = HOTELS.filter(h => h.destination === params.destination);
+  if (!candidates.length) {
+    candidates = HOTELS.filter(h =>
+      params.destination.toLowerCase().includes(h.destination.toLowerCase()) ||
+      h.name.toLowerCase().includes(params.destination.toLowerCase())
+    );
+  }
+  if (params.hotel_type && params.hotel_type.length) {
+    candidates = candidates.filter(h => params.hotel_type.includes(h.hotel_type));
+  }
+  if (params.min_rating) candidates = candidates.filter(h => h.rating >= params.min_rating);
+
+  const d1 = new Date(params.checkin), d2 = new Date(params.checkout);
+  const nights = Math.max(Math.round((d2 - d1) / (1000 * 60 * 60 * 24)), 1);
+
+  const results = [];
+  for (const h of candidates) {
+    const prices = generatePrices(h, params.checkin, params.checkout);
+    if (!prices.length) continue;
+    const lowest = prices[0];
+    if (params.min_price && lowest.price * nights < params.min_price) continue;
+    if (params.max_price && lowest.price * nights > params.max_price) continue;
+    results.push({
+      ...h,
+      prices,
+      lowest_price: lowest.price,
+      lowest_provider: lowest.provider,
+    });
+  }
+
+  const sortFn = {
+    price: (a, b) => a.lowest_price - b.lowest_price,
+    rating: (a, b) => b.rating - a.rating,
+    name: (a, b) => a.name.localeCompare(b.name),
+  }[params.sort_by] || ((a, b) => a.lowest_price - b.lowest_price);
+  results.sort(sortFn);
+
+  return { results, total: results.length, destination: params.destination, checkin: params.checkin, checkout: params.checkout, nights };
+}
+
+function formatPrice(n) {
+  return n.toLocaleString('ko-KR') + '원';
+}
+
+function imgUrl(photo) {
+  return `https://images.unsplash.com/${photo.split('?')[0]}?w=480&h=320&fit=crop&q=80`;
+}
+
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=480&h=320&fit=crop&q=80';
+
+const HOTEL_TYPE_KR = { hotel: '호텔', resort: '리조트', pension: '펜션' };
+
+// ====================== STATE ======================
+let currentTab = 'domestic';
+let currentSearchResult = null;
+let selectedCheckin = null;
+let selectedCheckout = null;
+let filterRating = 0;
+
+// ====================== DATE PICKER ======================
+class DatePicker {
+  constructor(inputEl, popupEl, opts = {}) {
+    this.input = inputEl;
+    this.popup = popupEl;
+    this.minDate = opts.minDate || null;
+    this.onSelect = opts.onSelect || (() => {});
+    this.selected = null;
+    this.viewYear = new Date().getFullYear();
+    this.viewMonth = new Date().getMonth();
+    this.input.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.open();
+    });
+    this.popup.addEventListener('click', (e) => e.stopPropagation());
+    this.render();
+  }
+  open() {
+    document.querySelectorAll('.datepicker-popup.show').forEach(p => p.classList.remove('show'));
+    this.popup.classList.add('show');
+  }
+  close() { this.popup.classList.remove('show'); }
+  setMinDate(d) { this.minDate = d; this.render(); }
+  render() {
+    const y = this.viewYear, m = this.viewMonth;
+    const firstDay = new Date(y, m, 1).getDay();
+    const daysInMonth = new Date(y, m + 1, 0).getDate();
+    const today = new Date(); today.setHours(0,0,0,0);
+    const monthNames = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+
+    let html = `<div class="dp-header">
+      <button class="dp-nav" data-dir="-1">&larr;</button>
+      <span>${y}년 ${monthNames[m]}</span>
+      <button class="dp-nav" data-dir="1">&rarr;</button>
+    </div>
+    <div class="dp-weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+    <div class="dp-days">`;
+
+    for (let i = 0; i < firstDay; i++) html += '<div class="dp-day empty"></div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(y, m, d);
+      const iso = this.toISO(date);
+      let cls = 'dp-day';
+      const isToday = date.getTime() === today.getTime();
+      const isSelected = this.selected && iso === this.selected;
+      const isDisabled = (this.minDate && date < new Date(this.minDate)) || date < today;
+      if (isToday) cls += ' today';
+      if (isSelected) cls += ' selected';
+      if (isDisabled) cls += ' disabled';
+      html += `<div class="${cls}" data-date="${iso}">${d}</div>`;
+    }
+    html += '</div>';
+    this.popup.innerHTML = html;
+
+    this.popup.querySelectorAll('.dp-nav').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dir = parseInt(btn.dataset.dir);
+        this.viewMonth += dir;
+        if (this.viewMonth < 0) { this.viewMonth = 11; this.viewYear--; }
+        if (this.viewMonth > 11) { this.viewMonth = 0; this.viewYear++; }
+        this.render();
+      });
+    });
+    this.popup.querySelectorAll('.dp-day:not(.disabled):not(.empty)').forEach(day => {
+      day.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selected = day.dataset.date;
+        this.input.value = this.selected;
+        this.render();
+        this.close();
+        this.onSelect(this.selected);
+      });
+    });
+  }
+  toISO(d) {
+    const yy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${yy}-${mm}-${dd}`;
+  }
+}
+
+// ====================== INIT ======================
+document.addEventListener('DOMContentLoaded', () => {
+  // Set default dates: tomorrow / day after tomorrow
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const dayAfter = new Date();
+  dayAfter.setDate(dayAfter.getDate() + 2);
+
+  const checkinPicker = new DatePicker(
+    document.getElementById('checkinInput'),
+    document.getElementById('checkinPicker'),
+    {
+      onSelect(date) {
+        selectedCheckin = date;
+        const next = new Date(date);
+        next.setDate(next.getDate() + 1);
+        checkoutPicker.setMinDate(date);
+        if (!selectedCheckout || new Date(selectedCheckout) <= new Date(date)) {
+          const nextISO = checkoutPicker.toISO(next);
+          checkoutPicker.selected = nextISO;
+          checkoutPicker.input.value = nextISO;
+          selectedCheckout = nextISO;
+          checkoutPicker.viewYear = next.getFullYear();
+          checkoutPicker.viewMonth = next.getMonth();
+          checkoutPicker.render();
+        }
+      }
+    }
+  );
+
+  const checkoutPicker = new DatePicker(
+    document.getElementById('checkoutInput'),
+    document.getElementById('checkoutPicker'),
+    {
+      onSelect(date) { selectedCheckout = date; }
+    }
+  );
+
+  // Set defaults
+  checkinPicker.selected = checkinPicker.toISO(tomorrow);
+  checkinPicker.input.value = checkinPicker.selected;
+  selectedCheckin = checkinPicker.selected;
+  checkoutPicker.selected = checkoutPicker.toISO(dayAfter);
+  checkoutPicker.input.value = checkoutPicker.selected;
+  selectedCheckout = checkoutPicker.selected;
+  checkoutPicker.setMinDate(checkinPicker.selected);
+
+  // Close datepickers on outside click
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.datepicker-popup.show').forEach(p => p.classList.remove('show'));
+    document.getElementById('acList').classList.remove('show');
+  });
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTab = btn.dataset.tab;
+      document.getElementById('destInput').value = '';
+      showPopularDestinations();
+      document.getElementById('resultsSection').style.display = 'none';
+      document.getElementById('popularSection').style.display = '';
+    });
+  });
+
+  // Autocomplete
+  const destInput = document.getElementById('destInput');
+  const acList = document.getElementById('acList');
+  let acHighlight = -1;
+
+  destInput.addEventListener('input', () => {
+    const val = destInput.value.trim().toLowerCase();
+    acHighlight = -1;
+    if (!val) { acList.classList.remove('show'); return; }
+    const matches = DESTINATIONS.filter(d =>
+      d.category === currentTab &&
+      (d.name.toLowerCase().includes(val) || d.name_en.toLowerCase().includes(val))
+    ).slice(0, 10);
+    if (!matches.length) { acList.classList.remove('show'); return; }
+    acList.innerHTML = matches.map((d, i) =>
+      `<div class="ac-item" data-name="${d.name}" data-idx="${i}">
+        <span>${DEST_EMOJI[d.name] || ''} ${d.name} (${d.name_en})</span>
+        <span class="ac-country">${d.country}</span>
+      </div>`
+    ).join('');
+    acList.classList.add('show');
+    acList.querySelectorAll('.ac-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        destInput.value = item.dataset.name;
+        acList.classList.remove('show');
+      });
+    });
+  });
+
+  destInput.addEventListener('keydown', (e) => {
+    const items = acList.querySelectorAll('.ac-item');
+    if (!items.length) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); acHighlight = Math.min(acHighlight + 1, items.length - 1); updateAcHighlight(items); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); acHighlight = Math.max(acHighlight - 1, 0); updateAcHighlight(items); }
+    else if (e.key === 'Enter' && acHighlight >= 0) { e.preventDefault(); destInput.value = items[acHighlight].dataset.name; acList.classList.remove('show'); }
+  });
+
+  destInput.addEventListener('click', (e) => e.stopPropagation());
+  acList.addEventListener('click', (e) => e.stopPropagation());
+
+  function updateAcHighlight(items) {
+    items.forEach((it, i) => it.classList.toggle('highlighted', i === acHighlight));
+  }
+
+  // Search
+  document.getElementById('searchBtn').addEventListener('click', doSearch);
+  destInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && acHighlight < 0) doSearch();
+  });
+
+  // Sort
+  document.getElementById('sortSelect').addEventListener('change', () => {
+    if (currentSearchResult) renderResults(currentSearchResult);
+  });
+
+  // Filter apply
+  document.getElementById('filterApplyBtn').addEventListener('click', doSearch);
+
+  // Star filter buttons
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.star-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      filterRating = parseFloat(btn.dataset.rating) || 0;
+    });
+  });
+  // Fix initial star filter state
+  document.querySelectorAll('.star-btn').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.rating === '0' && btn.textContent === '전체') btn.classList.add('active');
+  });
+  filterRating = 0;
+
+  // Modal close
+  document.getElementById('modalOverlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('modalOverlay')) closeModal();
+  });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+  // Show popular
+  showPopularDestinations();
+});
+
+// ====================== POPULAR DESTINATIONS ======================
+function showPopularDestinations() {
+  const pop = DESTINATIONS.filter(d => d.popular && d.category === currentTab);
+  const grid = document.getElementById('popularGrid');
+  const title = document.getElementById('popularTitle');
+  title.textContent = currentTab === 'domestic' ? '인기 국내 여행지' : '인기 해외 여행지';
+  grid.innerHTML = pop.map(d =>
+    `<div class="dest-card" data-dest="${d.name}">
+      <div class="dest-emoji">${DEST_EMOJI[d.name] || '🏨'}</div>
+      <div class="dest-name">${d.name}</div>
+      <div class="dest-country">${d.country}</div>
+    </div>`
+  ).join('');
+  grid.querySelectorAll('.dest-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.getElementById('destInput').value = card.dataset.dest;
+      doSearch();
+    });
+  });
+}
+
+// ====================== SEARCH ======================
+function doSearch() {
+  const dest = document.getElementById('destInput').value.trim();
+  if (!dest) { alert('여행지를 입력해주세요.'); return; }
+  if (!selectedCheckin || !selectedCheckout) { alert('체크인/체크아웃 날짜를 선택해주세요.'); return; }
+
+  // Gather filters
+  const typeChecks = document.querySelectorAll('.filter-group input[type="checkbox"]');
+  const types = [];
+  typeChecks.forEach(c => { if (c.checked) types.push(c.value); });
+  const minPrice = parseInt(document.getElementById('filterMinPrice').value) || 0;
+  const maxPrice = parseInt(document.getElementById('filterMaxPrice').value) || 0;
+
+  document.getElementById('popularSection').style.display = 'none';
+  document.getElementById('resultsSection').style.display = '';
+
+  // Show loading
+  document.getElementById('hotelList').innerHTML = `
+    <div class="loading-overlay">
+      <div class="spinner"></div>
+      <div>숙소를 검색하고 있습니다...</div>
+    </div>`;
+  document.getElementById('resultsCount').textContent = '';
+
+  setTimeout(() => {
+    const params = {
+      destination: dest,
+      checkin: selectedCheckin,
+      checkout: selectedCheckout,
+      hotel_type: types.length ? types : null,
+      min_rating: filterRating || null,
+      min_price: minPrice || null,
+      max_price: maxPrice || null,
+      sort_by: document.getElementById('sortSelect').value,
+    };
+    const data = searchHotels(params);
+    currentSearchResult = data;
+    renderResults(data);
+  }, 300);
+}
+
+// ====================== RENDER RESULTS ======================
+function renderResults(data) {
+  const sortBy = document.getElementById('sortSelect').value;
+  const sortFn = {
+    price: (a, b) => a.lowest_price - b.lowest_price,
+    rating: (a, b) => b.rating - a.rating,
+    name: (a, b) => a.name.localeCompare(b.name),
+  }[sortBy] || ((a, b) => a.lowest_price - b.lowest_price);
+  data.results.sort(sortFn);
+
+  const list = document.getElementById('hotelList');
+  document.getElementById('resultsCount').innerHTML =
+    `<strong>${data.destination}</strong> ${data.checkin} ~ ${data.checkout} (${data.nights}박) &middot; <strong>${data.total}개</strong> 숙소`;
+
+  if (!data.results.length) {
+    list.innerHTML = `<div class="no-results">
+      <div class="no-results-icon">🔍</div>
+      <h3>검색 결과가 없습니다</h3>
+      <p>다른 여행지나 조건으로 검색해 보세요.</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = data.results.map(h => {
+    const typeLabel = HOTEL_TYPE_KR[h.hotel_type] || h.hotel_type;
+    return `<div class="hotel-card" data-id="${h.id}">
+      <div class="hotel-img">
+        <img src="${imgUrl(h.image)}" alt="${h.name}" onerror="this.src='${FALLBACK_IMG}';" loading="lazy">
+        <div class="hotel-type-badge">${typeLabel}</div>
+      </div>
+      <div class="hotel-info">
+        <div>
+          <div class="hotel-name">${h.name}</div>
+          <div class="hotel-addr">${h.address}</div>
+          <div class="hotel-rating">
+            <span class="rating-badge">${h.rating}</span>
+            <span class="review-count">리뷰 ${h.review_count.toLocaleString()}개</span>
+          </div>
+          <div class="hotel-amenities">
+            ${h.amenities.slice(0, 5).map(a => `<span class="amenity-tag">${a}</span>`).join('')}
+          </div>
+          <div class="hotel-desc">${h.description}</div>
+        </div>
+        <div class="hotel-price-section">
+          <div class="price-left">
+            <div class="lowest-label">최저가 (1박)</div>
+            <div class="lowest-price">${formatPrice(h.lowest_price)}</div>
+            <div class="lowest-provider">${h.lowest_provider}</div>
+          </div>
+          <button class="price-compare-btn" data-id="${h.id}">가격비교 ${h.prices.length}개</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Card clicks
+  list.querySelectorAll('.hotel-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      if (e.target.closest('.price-compare-btn')) return;
+      const hid = card.dataset.id;
+      const hotel = data.results.find(h => h.id === hid);
+      if (hotel) openModal(hotel, data);
+    });
+  });
+  list.querySelectorAll('.price-compare-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const hid = btn.dataset.id;
+      const hotel = data.results.find(h => h.id === hid);
+      if (hotel) openModal(hotel, data);
+    });
+  });
+}
+
+// ====================== MODAL ======================
+function openModal(hotel, searchData) {
+  const nights = searchData.nights;
+  const allProviders = OTA_PROVIDERS.map(ota => {
+    const found = hotel.prices.find(p => p.provider === ota.name);
+    return found ? { ...found, available: true, color: ota.color } : { provider: ota.name, available: false, color: ota.color };
+  });
+
+  const content = document.getElementById('modalContent');
+  content.innerHTML = `
+    <div class="modal-header">
+      <div>
+        <div class="modal-hotel-name">${hotel.name}</div>
+        <div class="modal-hotel-dest">${hotel.destination} &middot; ${HOTEL_TYPE_KR[hotel.hotel_type] || hotel.hotel_type} &middot; ${hotel.rating}점</div>
+      </div>
+      <button class="modal-close" id="modalCloseBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-dates">
+        <span>체크인: ${searchData.checkin}</span>
+        <span>체크아웃: ${searchData.checkout}</span>
+        <span>${nights}박</span>
+      </div>
+      ${allProviders.map((p, i) => {
+        if (!p.available) {
+          return `<div class="ota-unavailable">
+            <div class="ota-dot" style="background:${p.color}"></div>
+            <span>${p.provider} - 예약 불가</span>
+          </div>`;
+        }
+        const isCheapest = i === 0 || p.price === allProviders.filter(x=>x.available)[0].price;
+        const total = p.price * nights;
+        return `<div class="ota-row${isCheapest && p === allProviders.filter(x=>x.available)[0] ? ' cheapest' : ''}">
+          <div class="ota-left">
+            <div class="ota-dot" style="background:${p.color}"></div>
+            <span class="ota-name">${p.provider}</span>
+            ${isCheapest && p === allProviders.filter(x=>x.available)[0] ? '<span class="cheapest-badge">최저가</span>' : ''}
+          </div>
+          <div class="ota-right">
+            <div class="ota-prices">
+              ${p.original_price ? `<div class="ota-original">${formatPrice(p.original_price)}</div>` : ''}
+              <div class="ota-current">${formatPrice(p.price)}</div>
+              ${nights > 1 ? `<div class="ota-total">${nights}박 합계 ${formatPrice(total)}</div>` : ''}
+            </div>
+            <a href="${p.url}" target="_blank" rel="noopener" class="ota-book" style="background:${p.color}">예약하기 &rarr;</a>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  document.getElementById('modalCloseBtn').addEventListener('click', closeModal);
+  document.getElementById('modalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+</script>
+</body>
+</html>
